@@ -149,6 +149,9 @@ public final class UserPanel extends JPanel {
     userSignInButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
+
+        String password = "Test Password";
+
         if (userList.getSelectedIndex() != -1) {
           final String data = userList.getSelectedValue();
           final String password = (String) JOptionPane.showInputDialog(
