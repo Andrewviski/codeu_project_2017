@@ -28,6 +28,8 @@ import codeu.chat.util.*;
 import codeu.chat.util.connections.Connection;
 import codeu.chat.server.user_recommendation.K_Means;
 
+import codeu.chat.server.ViewDatabase;
+
 public final class Server {
 
   private static final Logger.Log LOG = Logger.newLog(Server.class);
@@ -153,7 +155,7 @@ public final class Server {
 
       final Collection<Uuid> ids = Serializers.collection(Uuid.SERIALIZER).read(in);
 
-      final Collection<User> users = view.getUsers(ids);
+      final Collection<User> users = ViewDatabase.getUsers(ids);
 
       Serializers.INTEGER.write(out, NetworkCode.GET_USERS_BY_ID_RESPONSE);
       Serializers.collection(User.SERIALIZER).write(out, users);
@@ -192,7 +194,7 @@ public final class Server {
 
       final Collection<Uuid> ids = Serializers.collection(Uuid.SERIALIZER).read(in);
 
-      final Collection<User> users = view.getUsersExcluding(ids);
+      final Collection<User> users = ViewDatabase.getUsersExcluding(ids);
 
       Serializers.INTEGER.write(out, NetworkCode.GET_USERS_EXCLUDING_RESPONSE);
       Serializers.collection(User.SERIALIZER).write(out, users);

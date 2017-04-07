@@ -32,6 +32,7 @@ import javax.swing.plaf.nimbus.State;
 import java.sql.*;
 import java.util.Date;
 import java.text.SimpleDateFormat;
+import codeu.chat.common.SQLFormatter;
 
 import codeu.chat.common.SQLFormatter;
 
@@ -42,6 +43,7 @@ public final class Controller implements RawController, BasicController {
   private final Model model;
   private final DataBaseConnection connection = new DataBaseConnection();
   private final Uuid.Generator uuidGenerator;
+  private SQLFormatter sqlFormatter;
 
   public Controller(Uuid serverId, Model model) {
     this.model = model;
@@ -101,7 +103,7 @@ public final class Controller implements RawController, BasicController {
       user = new User(id, name, creationTime, password);
       stmt = connection.createStatement();
       String sql = "INSERT INTO USERS (ID,UNAME,TIMECREATED,PASSWORD) " +
-              "VALUES ("+sqlID(id)+", "+sqlName(name)+", "+sqlCreationTime(creationTime)+", "+sqlPassword(password)+");";
+              "VALUES ("+sqlFormatter.sqlID(id)+", "+sqlFormatter.sqlName(name)+", "+sqlFormatter.sqlCreationTime(creationTime)+", "+sqlFormatter.sqlPassword(password)+");";
       stmt.executeUpdate(sql);
 
       LOG.info(
@@ -177,67 +179,6 @@ public final class Controller implements RawController, BasicController {
     }
 
     return candidate;
-  }
-
-  private String sqlID(Uuid userID){
-    String sqlID = userID.toString();
-    sqlID = sqlID.replace("[UUID:","");
-    sqlID = sqlID.replace("]","");
-    sqlID = "'" + sqlID + "'";
-    return sqlID;
-  }
-
-  private String sqlName(String userName){
-    String sqlName = "'" + userName + "'";
-    return sqlName;
-  }
-
-  private String sqlCreationTime(Time userTime){
-    SimpleDateFormat sqlFormatter = new SimpleDateFormat("YYYY-MM-DD HH:MM:SS");
-    String sqlCreationTime = sqlFormatter.format(new Date(userTime.inMs())).toString();
-    sqlCreationTime = "'" + sqlCreationTime + "'";
-    return sqlCreationTime;
-  }
-
-  private String sqlPassword(String userPassword){
-    String sqlPassword = "'" + userPassword + "'";
-    return sqlPassword;
-  }
-
-  private String sqlBody(String userBody){
-    String sqlBody = "'" + userBody + "'";
-    return sqlBody;
-  }
-
-  private boolean sqlValidConversation(Uuid userID, Uuid conversationID){
-    boolean validConversation = false;
-
-    Connection connection = null;
-    Statement stmt = null;
-
-    try {
-      Class.forName("org.sqlite.JDBC");
-      connection = DriverManager.getConnection("jdbc:sqlite:./bin/codeu/chat/codeU_db/ChatDatabase.db");
-      connection.setAutoCommit(false);
-
-      stmt = connection.createStatement();
-      ResultSet rs = stmt.executeQuery( "SELECT * " +
-              "FROM USER_CONVERSATION" +
-              "WHERE  USERID = "+sqlID(userID)+"" +
-              "AND    CONVERSATIONID = "+sqlID(conversationID)+";" );
-      if(rs.next()){
-        validConversation = true;
-        System.out.println("Conversation exists and User is a member");
-      }
-      rs.close();
-      stmt.close();
-      connection.close();
-    } catch ( Exception e ) {
-      System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-      System.exit(0);
-    }
-
-    return validConversation;
   }
 
   private boolean isIdInUse(Uuid id) {
