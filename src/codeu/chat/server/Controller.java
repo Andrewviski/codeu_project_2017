@@ -43,7 +43,6 @@ public final class Controller implements RawController, BasicController {
   private final Model model;
   private final DataBaseConnection connection = new DataBaseConnection();
   private final Uuid.Generator uuidGenerator;
-  private SQLFormatter sqlFormatter;
 
   public Controller(Uuid serverId, Model model) {
     this.model = model;
@@ -103,7 +102,7 @@ public final class Controller implements RawController, BasicController {
       user = new User(id, name, creationTime, password);
       stmt = connection.createStatement();
       String sql = "INSERT INTO USERS (ID,UNAME,TIMECREATED,PASSWORD) " +
-              "VALUES ("+sqlFormatter.sqlID(id)+", "+sqlFormatter.sqlName(name)+", "+sqlFormatter.sqlCreationTime(creationTime)+", "+sqlFormatter.sqlPassword(password)+");";
+              "VALUES ("+SQLFormatter.sqlID(id)+", "+SQLFormatter.sqlName(name)+", "+SQLFormatter.sqlCreationTime(creationTime)+", "+SQLFormatter.sqlPassword(password)+");";
       stmt.executeUpdate(sql);
 
       LOG.info(
@@ -124,6 +123,8 @@ public final class Controller implements RawController, BasicController {
       System.err.println( e.getClass().getName() + ": " + e.getMessage() );
       System.exit(0);
     }
+
+    // Previous Model
 
     if (isIdFree(id)) {
 

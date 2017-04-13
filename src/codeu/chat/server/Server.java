@@ -162,7 +162,7 @@ public final class Server {
 
     } else if (type == NetworkCode.GET_ALL_CONVERSATIONS_REQUEST) {
 
-      final Collection<ConversationSummary> conversations = view.getAllConversations();
+      final Collection<ConversationSummary> conversations = ViewDatabase.getAllConversations();
 
       Serializers.INTEGER.write(out, NetworkCode.GET_ALL_CONVERSATIONS_RESPONSE);
       Serializers.collection(ConversationSummary.SERIALIZER).write(out, conversations);
@@ -171,7 +171,7 @@ public final class Server {
 
       final Collection<Uuid> ids = Serializers.collection(Uuid.SERIALIZER).read(in);
 
-      final Collection<Conversation> conversations = view.getConversations(ids);
+      final Collection<Conversation> conversations = ViewDatabase.getConversations(ids);
 
       Serializers.INTEGER.write(out, NetworkCode.GET_CONVERSATIONS_BY_ID_RESPONSE);
       Serializers.collection(Conversation.SERIALIZER).write(out, conversations);
@@ -180,7 +180,7 @@ public final class Server {
 
       final Collection<Uuid> ids = Serializers.collection(Uuid.SERIALIZER).read(in);
 
-      final Collection<Message> messages = view.getMessages(ids);
+      final Collection<Message> messages = ViewDatabase.getMessages(ids);
 
       Serializers.INTEGER.write(out, NetworkCode.GET_MESSAGES_BY_ID_RESPONSE);
       Serializers.collection(Message.SERIALIZER).write(out, messages);
@@ -204,7 +204,7 @@ public final class Server {
       final Time startTime = Time.SERIALIZER.read(in);
       final Time endTime = Time.SERIALIZER.read(in);
 
-      final Collection<Conversation> conversations = view.getConversations(startTime, endTime);
+      final Collection<Conversation> conversations = ViewDatabase.getConversations(startTime, endTime);
 
       Serializers.INTEGER.write(out, NetworkCode.GET_CONVERSATIONS_BY_TIME_RESPONSE);
       Serializers.collection(Conversation.SERIALIZER).write(out, conversations);
@@ -213,7 +213,7 @@ public final class Server {
 
       final String filter = Serializers.STRING.read(in);
 
-      final Collection<Conversation> conversations = view.getConversations(filter);
+      final Collection<Conversation> conversations = ViewDatabase.getConversations(filter);
 
       Serializers.INTEGER.write(out, NetworkCode.GET_CONVERSATIONS_BY_TITLE_RESPONSE);
       Serializers.collection(Conversation.SERIALIZER).write(out, conversations);
@@ -224,7 +224,7 @@ public final class Server {
       final Time startTime = Time.SERIALIZER.read(in);
       final Time endTime = Time.SERIALIZER.read(in);
 
-      final Collection<Message> messages = view.getMessages(conversation, startTime, endTime);
+      final Collection<Message> messages = ViewDatabase.getMessages(conversation, startTime, endTime);
 
       Serializers.INTEGER.write(out, NetworkCode.GET_MESSAGES_BY_TIME_RESPONSE);
       Serializers.collection(Message.SERIALIZER).write(out, messages);
