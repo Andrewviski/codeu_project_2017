@@ -122,9 +122,9 @@ public final class Controller implements RawController, BasicController {
       System.exit(0);
     }
 
-    // Previous Model
-
-    if (isIdFree(id)) {
+    // ---------------------------------------------------------------------
+    // PREVIOUS MODEL
+    /*if (isIdFree(id)) {
 
       user = new User(id, name, creationTime, password);
       model.add(user);
@@ -142,7 +142,8 @@ public final class Controller implements RawController, BasicController {
           id,
           name,
           creationTime);
-    }
+    }*/
+    // ---------------------------------------------------------------------
 
     return user;
   }
@@ -159,7 +160,8 @@ public final class Controller implements RawController, BasicController {
       model.add(conversation);
 
       LOG.info("Conversation added: " + conversation.id);
-    }
+    }*/
+    // ---------------------------------------------------------------------
 
     return conversation;
   }
