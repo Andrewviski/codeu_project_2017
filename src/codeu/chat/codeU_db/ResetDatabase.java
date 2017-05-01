@@ -2,7 +2,7 @@ package codeu.chat.codeU_db;
 
 import java.sql.*;
 
-public class CreateDatabase
+public class ResetDatabase
 {
     public static void main( String args[] )
     {
@@ -18,13 +18,39 @@ public class CreateDatabase
             System.exit(0);
         }
 
+        //drop tables before creating them
+        try {
+            stmt = c.createStatement();
+            String sql = "DROP TABLE USERS";
+            stmt.executeUpdate(sql);
+            stmt.close();
+
+            stmt = c.createStatement();
+            sql = "DROP TABLE CONVERSATIONS";
+            stmt.executeUpdate(sql);
+            stmt.close();
+
+            stmt = c.createStatement();
+            sql = "DROP TABLE USER_CONVERSATION";
+            stmt.executeUpdate(sql);
+            stmt.close();
+
+            stmt = c.createStatement();
+            sql = "DROP TABLE MESSAGES";
+            stmt.executeUpdate(sql);
+            stmt.close();
+
+        }catch ( Exception e ) {
+            System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+            System.exit(0);
+        }
+
         try {
             stmt = c.createStatement();
             String sql = "CREATE TABLE USERS " +
-
                     "(ID            VARCHAR(16) PRIMARY KEY NOT NULL," +
-                    " UNAME         CHAR(25)    UNIQUE      NOT NULL, " +
-                    " TimeCreated   BIGINT               NOT NULL, " +
+                    " UNAME          CHAR(25)    UNIQUE      NOT NULL, " +
+                    " TimeCreated   TIMESTAMP               NOT NULL, " +
                     " PASSWORD      TEXT                    NOT NULL)";
             stmt.executeUpdate(sql);
             stmt.close();
@@ -38,10 +64,9 @@ public class CreateDatabase
             stmt = c.createStatement();
             String sql = "CREATE TABLE CONVERSATIONS " +
                     "(ID            VARCHAR(16) PRIMARY KEY NOT NULL, " +
-                    " CNAME         CHAR(25)                NOT NULL, " +
+                    " CNAME          CHAR(25)                NOT NULL, " +
                     " OWNERID       VARCHAR(16)             NOT NULL, " +
-                    " TimeCreated   BIGINT               NOT NULL, " +
-
+                    " TimeCreated   TIMESTAMP               NOT NULL, " +
                     " FOREIGN KEY(OWNERID) REFERENCES USERS(ID))";
             stmt.executeUpdate(sql);
             stmt.close();
@@ -54,7 +79,6 @@ public class CreateDatabase
         try {
             stmt = c.createStatement();
             String sql = "CREATE TABLE USER_CONVERSATION " +
-
                     "(ID                VARCHAR(32) PRIMARY KEY NOT NULL, " +
                     " USERID            VARCHAR(16)             NOT NULL, " +
                     " CONVERSATIONID    VARCHAR(16)             NOT NULL, " +
@@ -76,7 +100,7 @@ public class CreateDatabase
                     " MNEXTID           VARCHAR(16),                      " +
                     " MPREVID           VARCHAR(16),                      " +
                     " CONVERSATIONID    VARCHAR(16)             NOT NULL, " +
-                    " TimeCreated       BIGINT                  NOT NULL, " +
+                    " TimeCreated       TIMESTAMP               NOT NULL, " +
                     " MESSAGE           TEXT                    NOT NULL, " +
                     " FOREIGN KEY(USERID)         REFERENCES USERS(ID), " +
                     " FOREIGN KEY(MNEXTID)        REFERENCES MESSAGES(ID), " +
