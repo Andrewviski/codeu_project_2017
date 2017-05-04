@@ -9,6 +9,7 @@ public class CreateDatabase {
   }
 public class CreateDatabase
 {
+
     public static void main( String args[] )
     {
         DataBaseConnection.open();
