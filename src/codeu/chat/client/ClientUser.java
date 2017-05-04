@@ -56,6 +56,9 @@ public final class ClientUser {
     }
     return clean;
   }
+  static public boolean isValidPassword(String passWord) {
+    return passWord != "";
+  }
 
   static public boolean isValidPassword(String passWord) {
     return passWord != "";
