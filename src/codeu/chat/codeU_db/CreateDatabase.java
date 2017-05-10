@@ -88,5 +88,6 @@ public class CreateDatabase
         System.out.println("Table <MESSAGES> created successfully");
 
         System.out.println("Finished Creating Database Successfully!!!");
+        DataBaseConnection.close();
     }
 }
