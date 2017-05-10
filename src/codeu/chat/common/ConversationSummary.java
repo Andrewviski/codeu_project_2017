@@ -25,48 +25,52 @@ import codeu.chat.util.Uuid;
 
 public final class ConversationSummary implements ListViewable {
 
-  public static final Serializer<ConversationSummary> SERIALIZER = new Serializer<ConversationSummary>() {
+    public static final Serializer<ConversationSummary> SERIALIZER = new Serializer<ConversationSummary>() {
 
-    @Override
-    public void write(OutputStream out, ConversationSummary value) throws IOException {
+        @Override
+        public void write(OutputStream out, ConversationSummary value) throws IOException {
 
-      Uuid.SERIALIZER.write(out, value.id);
-      Uuid.SERIALIZER.write(out, value.owner);
-      Time.SERIALIZER.write(out, value.creation);
-      Serializers.STRING.write(out, value.title);
+            Uuid.SERIALIZER.write(out, value.id);
+            Uuid.SERIALIZER.write(out, value.owner);
+            Time.SERIALIZER.write(out, value.creation);
+            Serializers.STRING.write(out, value.title);
+
+        }
+
+        @Override
+        public ConversationSummary read(InputStream in) throws IOException {
+
+            return new ConversationSummary(
+                    Uuid.SERIALIZER.read(in),
+                    Uuid.SERIALIZER.read(in),
+                    Time.SERIALIZER.read(in),
+                    Serializers.STRING.read(in)
+            );
+
+        }
+    };
+
+    public final Uuid id;
+    public final Uuid owner;
+    public final Time creation;
+    public final String title;
+
+    public ConversationSummary(Uuid id, Uuid owner, Time creation, String title) {
+
+        this.id = id;
+        this.owner = owner;
+        this.creation = creation;
+        this.title = title;
 
     }
 
-    @Override
-    public ConversationSummary read(InputStream in) throws IOException {
-
-      return new ConversationSummary(
-          Uuid.SERIALIZER.read(in),
-          Uuid.SERIALIZER.read(in),
-          Time.SERIALIZER.read(in),
-          Serializers.STRING.read(in)
-      );
-
+    public static ConversationSummary fromConversation(Conversation c) {
+        return new ConversationSummary(c.id, c.owner, c.creation, c.title);
     }
-  };
 
-  public final Uuid id;
-  public final Uuid owner;
-  public final Time creation;
-  public final String title;
-
-  public ConversationSummary(Uuid id, Uuid owner, Time creation, String title) {
-
-    this.id = id;
-    this.owner = owner;
-    this.creation = creation;
-    this.title = title;
-
-  }
-
-  // How this object should appear in a user-viewable list
-  @Override
-  public String listView() {
-    return title;
-  }
+    // How this object should appear in a user-viewable list
+    @Override
+    public String listView() {
+        return title;
+    }
 }

@@ -21,6 +21,7 @@ import codeu.chat.client.Controller;
 import codeu.chat.client.View;
 import codeu.chat.common.ConversationSummary;
 import codeu.chat.util.Logger;
+import codeu.chat.util.Uuid;
 
 import java.io.Console;
 
@@ -57,6 +58,7 @@ public final class Chat {
         System.out.println("   c-add <title>    - add a new conversation.");
         System.out.println("   c-list-all       - list all conversations known to system.");
         System.out.println("   c-select <index> - select conversation from list.");
+        System.out.println("   c-add-user <username> - add a new user to the current conversation.")
         System.out.println("Message commands:");
         System.out.println("   m-add <body>     - add a new message to the current conversation.");
         System.out.println("   m-list-all       - list all messages in the current conversation.");
@@ -146,6 +148,17 @@ public final class Chat {
         } else if (token.equals("c-select")) {
 
             selectConversation(lineScanner);
+        } else if (token.equals("c-add-user")) {
+            if(!tokenScanner.hasNext()){
+                System.out.print("ERROR: Username not supplied.");
+            }else{
+                String user = tokenScanner.next().trim();
+                if(!clientContext.conversation.hasCurrent()){
+                    System.out.println("ERROR: no conversation selected.");
+                }else{
+                    addUserToCoversation(clientContext.user.getCurrent().id,clientContext.conversation.getCurrent());
+                }
+            }
 
         } else if (token.equals("m-add")) {
 
@@ -200,6 +213,10 @@ public final class Chat {
             System.out.println("Type \"help\" for help.");
         }
         tokenScanner.close();
+    }
+
+    private void addUserToCoversation(Uuid id, ConversationSummary current) {
+
     }
 
     // Sign in a user.

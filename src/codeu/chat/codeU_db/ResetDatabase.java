@@ -7,5 +7,6 @@ public class ResetDatabase
         DataBaseConnection.dropTables();
         DataBaseConnection.createTables();
         System.out.println("Finished Resetting Database Successfully!!!");
+        DataBaseConnection.close();
     }
 }

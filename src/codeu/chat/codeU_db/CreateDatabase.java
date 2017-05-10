@@ -8,5 +8,6 @@ public class CreateDatabase
         DataBaseConnection.open();
         DataBaseConnection.createTables();
         System.out.println("Finished Creating Database Successfully!!!");
+        DataBaseConnection.close();
     }
 }

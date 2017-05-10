@@ -21,25 +21,25 @@ import codeu.chat.util.store.StoreAccessor;
  */
 public final class ViewDatabase {
 
-    private static ResultSet getResultSet(String tableName, Collection<Uuid> ids,boolean exclude,String extraConstraints) {
+    private static ResultSet getResultSet(String tableName, Collection<Uuid> ids, boolean exclude, String extraConstraints) {
         Connection c = DataBaseConnection.open();
         ResultSet rs = null;
         try {
             Statement stmt = c.createStatement();
             String query = "SELECT * " +
                     " FROM " + tableName;
-            if(ids!=null&&ids.size()!=0) {
-                Uuid[] uids=(Uuid[])ids.toArray();
+            if (ids != null && ids.size() != 0) {
+                Uuid[] uids = (Uuid[]) ids.toArray();
                 query += " WHERE  ID ";
-                for (int i=0;i<uids.length;i++) {
+                for (int i = 0; i < uids.length; i++) {
                     query += (exclude) ? " <> " : " = ";
                     query += SQLFormatter.sqlID(uids[i]);
-                    if(i!=uids.length-1)
-                        query+=" OR ";
+                    if (i != uids.length - 1)
+                        query += " OR ";
                 }
             }
-            if(extraConstraints!=null)
-                query+=" AND " + extraConstraints;
+            if (extraConstraints != null)
+                query += " AND " + extraConstraints;
             query += ";";
             rs = stmt.executeQuery(query);
             stmt.close();
@@ -95,6 +95,7 @@ public final class ViewDatabase {
         return found;
     }
 
+
     private static Collection<Message> buildMessageSet(ResultSet rs) {
         final Collection<Message> found = new HashSet<>();
 
@@ -121,19 +122,19 @@ public final class ViewDatabase {
 
     public static Collection<User> getUsers(Collection<Uuid> ids) {
         System.out.println("Accessing ViewDatabase");
-        ResultSet rs = getResultSet("USERS", ids,false,null);
+        ResultSet rs = getResultSet("USERS", ids, false, null);
         return buildUserSet(rs);
     }
 
     public static Collection<Conversation> getConversations(Collection<Uuid> ids) {
         System.out.println("Accessing ViewDatabase");
-        ResultSet rs = getResultSet("CONVERSATIONS", ids,false,null);
+        ResultSet rs = getResultSet("CONVERSATIONS", ids, false, null);
         return buildConversationSet(rs);
     }
 
     public static Collection<Message> getMessages(Collection<Uuid> ids) {
         System.out.println("Accessing ViewDatabase");
-        ResultSet rs = getResultSet("MESSAGES", ids,false,null);
+        ResultSet rs = getResultSet("MESSAGES", ids, false, null);
         return buildMessageSet(rs);
     }
 
@@ -141,31 +142,18 @@ public final class ViewDatabase {
 
         final Collection<ConversationSummary> summaries = new ArrayList<>();
 
-        Connection connection = null;
-        Statement stmt = null;
-
         try {
-            Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:./bin/codeu/chat/codeU_db/ChatDatabase.db");
-            connection.setAutoCommit(false);
+            Connection c=DataBaseConnection.open();
 
-            stmt = connection.createStatement();
+            Statement stmt = c.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT * " +
                     "FROM CONVERSATIONS;");
-            while (rs.next()) {
-                Uuid conversationID = Uuid.parse(rs.getString("ID"));
-                Uuid userID = Uuid.parse(rs.getString("OWNERID"));
-                String conversationName = rs.getString("CNAME");
-                Time creationTime = Time.fromMs(rs.getLong("TimeCreated"));
-
-                ConversationSummary conversation = new ConversationSummary(conversationID, userID, creationTime, conversationName);
-                summaries.add(conversation);
-            }
-
-            rs.close();
+            Collection<Conversation> convs = buildConversationSet(rs);
+            for (Conversation c : convs)
+                summaries.add(ConversationSummary.fromConversation(c));
             stmt.close();
 
-            connection.close();
+            DataBaseConnection.close();
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             System.exit(0);
@@ -177,15 +165,10 @@ public final class ViewDatabase {
 
     public static Collection<User> getUsersExcluding(Collection<Uuid> ids) {
 
-        final Set<User> users = new HashSet<>();
-
         System.out.println("Accessing ViewDatabase");
-
-        Connection connection = null;
-        Statement stmt = null;
         boolean flag = true;
-
         String parameters;
+        ResultSet rs=null;
 
         if (!ids.isEmpty()) {
             parameters = "WHERE ";
@@ -204,155 +187,86 @@ public final class ViewDatabase {
         }
 
         try {
-            Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:./bin/codeu/chat/codeU_db/ChatDatabase.db");
-            connection.setAutoCommit(false);
+            Connection c=DataBaseConnection.open();
 
-            stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * " +
+            Statement stmt = c.createStatement();
+            rs = stmt.executeQuery("SELECT * " +
                     "FROM USERS " +
                     parameters + ";");
-            while (rs.next()) {
-                Uuid userID = Uuid.parse(rs.getString("ID"));
-                String userName = rs.getString("UNAME");
-                Time creationTime = Time.fromMs(rs.getLong("TimeCreated"));
-                String userPassword = rs.getString("PASSWORD");
-
-
-                User user = new User(userID, userName, creationTime, userPassword);
-                users.add(user);
-            }
-            rs.close();
             stmt.close();
 
-            connection.close();
+            DataBaseConnection.close();
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             System.exit(0);
         }
-
-        return users;
+        return buildUserSet(rs);
     }
 
     public static Collection<Conversation> getConversations(Time start, Time end) {
-        final Collection<Conversation> found = new ArrayList<>();
-
-        Connection connection = null;
-        Statement stmt = null;
+        ResultSet rs = null;
 
         try {
-            Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:./bin/codeu/chat/codeU_db/ChatDatabase.db");
-            connection.setAutoCommit(false);
+            Connection c = DataBaseConnection.open();
 
-
-            stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * " +
+            Statement stmt = c.createStatement();
+            rs = stmt.executeQuery("SELECT * " +
                     "FROM CONVERSATIONS " +
                     "WHERE TimeCreated > " + SQLFormatter.sqlCreationTime(start) +
                     " AND TimeCreated < " + SQLFormatter.sqlCreationTime(end) +
                     " ORDER BY TimeCreated ASC;");
-            while (rs.next()) {
-                Uuid conversationID = Uuid.parse(rs.getString("ID"));
-                Uuid userID = Uuid.parse(rs.getString("OWNERID"));
-                String conversationName = rs.getString("CNAME");
-                Time creationTime = Time.fromMs(rs.getLong("TimeCreated"));
-
-                Conversation conversation = new Conversation(conversationID, userID, creationTime, conversationName);
-                found.add(conversation);
-            }
-
-            rs.close();
             stmt.close();
-            connection.close();
+
+            DataBaseConnection.close();
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             System.exit(0);
         }
 
-        return found;
+        return buildConversationSet(rs);
     }
 
     public static Collection<Conversation> getConversations(String filter) {
-
-        final Collection<Conversation> found = new ArrayList<>();
-
-        Connection connection = null;
-        Statement stmt = null;
+        ResultSet rs = null;
 
         try {
-            Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:./bin/codeu/chat/codeU_db/ChatDatabase.db");
-            connection.setAutoCommit(false);
+            Connection c = DataBaseConnection.open();
 
-
-            stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * " +
+            Statement stmt = c.createStatement();
+            rs = stmt.executeQuery("SELECT * " +
                     "FROM CONVERSATIONS " +
                     "WHERE CNAME LIKE '%" + filter + "%';");
-
-            while (rs.next()) {
-                Uuid conversationID = Uuid.parse(rs.getString("ID"));
-                Uuid userID = Uuid.parse(rs.getString("OWNERID"));
-                String conversationName = rs.getString("CNAME");
-                Time creationTime = Time.fromMs(rs.getLong("TimeCreated"));
-
-                Conversation conversation = new Conversation(conversationID, userID, creationTime, conversationName);
-                found.add(conversation);
-            }
-
-            rs.close();
             stmt.close();
-            connection.close();
+
+            DataBaseConnection.close();
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             System.exit(0);
         }
 
-        return found;
+        return buildConversationSet(rs);
     }
 
     public static Collection<Message> getMessages(Uuid conversation, Time start, Time end) {
-
-        final Collection<Message> found = new ArrayList<>();
-
-        Connection connection = null;
-        Statement stmt = null;
+        ResultSet rs = null;
 
         try {
-            Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:./bin/codeu/chat/codeU_db/ChatDatabase.db");
-            connection.setAutoCommit(false);
+            Connection c = DataBaseConnection.open();
 
-
-            stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * " +
+            Statement stmt = c.createStatement();
+            rs = stmt.executeQuery("SELECT * " +
                     "FROM CONVERSATIONS " +
                     "WHERE TimeCreated > " + SQLFormatter.sqlCreationTime(start) +
                     " AND TimeCreated < " + SQLFormatter.sqlCreationTime(end) +
                     " AND CONVERSATIONID = " + SQLFormatter.sqlID(conversation) +
                     " ORDER BY TimeCreated ASC;");
-
-            while (rs.next()) {
-                Uuid messageID = Uuid.parse(rs.getString("ID"));
-                Uuid nextMessageID = Uuid.parse(rs.getString("MNEXTID"));
-                Uuid prevMessageID = Uuid.parse(rs.getString("PNEXTID"));
-                Time creationTime = Time.fromMs(rs.getLong("TimeCreated"));
-                Uuid authorID = Uuid.parse(rs.getString("USERID"));
-                String content = rs.getString("MESSAGE");
-
-                Message message = new Message(messageID, nextMessageID, prevMessageID, creationTime, authorID, content);
-                found.add(message);
-            }
-
-            rs.close();
             stmt.close();
-            connection.close();
+
+            DataBaseConnection.close();
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             System.exit(0);
         }
-
-        return found;
+        return buildMessageSet(rs);
     }
 }
