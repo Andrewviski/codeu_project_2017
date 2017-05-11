@@ -58,7 +58,7 @@ public final class Chat {
         System.out.println("   c-add <title>    - add a new conversation.");
         System.out.println("   c-list-all       - list all conversations known to system.");
         System.out.println("   c-select <index> - select conversation from list.");
-        System.out.println("   c-add-user <username> - add a new user to the current conversation.")
+        System.out.println("   c-add-user <username> - add a new user to the current conversation.");
         System.out.println("Message commands:");
         System.out.println("   m-add <body>     - add a new message to the current conversation.");
         System.out.println("   m-list-all       - list all messages in the current conversation.");
