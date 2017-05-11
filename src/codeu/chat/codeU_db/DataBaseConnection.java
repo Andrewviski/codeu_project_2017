@@ -1,9 +1,17 @@
 package codeu.chat.codeU_db;
 
 import java.sql.*;
+import java.util.Optional;
 
-public class DataBaseConnection{
+public final class DataBaseConnection{
     private static Connection c = null;
+    private static Statement stmt = null;
+
+    public DataBaseConnection()
+    {
+        c = null;
+        stmt = null;
+    }
 
     public static Connection open(){
         if(c!=null){
@@ -22,7 +30,8 @@ public class DataBaseConnection{
         return c;
     }
     public static void createTables(){
-        Statement stmt = null;
+        c = null;
+        open();
         try {
             stmt =c.createStatement();
             String sql = "CREATE TABLE USERS " +
@@ -88,12 +97,14 @@ public class DataBaseConnection{
                     " FOREIGN KEY(CONVERSATIONID) REFERENCES CONVERSATIONS(ID))";
             stmt.executeUpdate(sql);
             stmt.close();
+            c.commit();
 
         } catch ( Exception e ) {
             System.err.println( e.getClass().getName() + ": " + e.getMessage() );
             System.exit(0);
         }
         System.out.println("Table <MESSAGES> created successfully");
+        close();
     }
     public static void dropTables(){
         Statement stmt = null;
@@ -129,6 +140,51 @@ public class DataBaseConnection{
     public static Connection getConnection(){
         return c;
     }
+
+    public static boolean dbUpdate(String str)
+    {
+        open();
+        boolean status = true;
+        try {
+            stmt = c.createStatement();
+            stmt.executeUpdate(str);
+            stmt.close();
+            c.commit();
+        } catch (Exception e) {
+            System.out.println("Error adding message to conversation");
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            status = false;
+            System.exit(0);
+        }
+        close();
+        return status;
+    }
+
+    public static ResultSet dbQuery(String str)
+    {
+        ResultSet query = null;
+        open();
+        try {
+
+            Statement stmt = c.createStatement();
+            query = stmt.executeQuery(str);
+
+            while (query.next())
+            {
+                System.out.println(query.getString("UNAME"));
+            }
+
+            stmt.close();
+
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            System.exit(0);
+        }
+
+        close();
+        return query;
+    }
+
     public static void close(){
         try {
             c.close();

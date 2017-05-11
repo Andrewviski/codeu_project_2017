@@ -39,11 +39,13 @@ public final class Controller implements RawController, BasicController {
     private final static Logger.Log LOG = Logger.newLog(Controller.class);
 
     private final Model model;
+    private final DataBaseConnection connection = new DataBaseConnection();
     private final Uuid.Generator uuidGenerator;
 
     public Controller(Uuid serverId, Model model) {
         this.model = model;
         this.uuidGenerator = new RandomUuidGenerator(serverId, System.currentTimeMillis());
+        newUser(createId(), "Admin", Time.now(), "admin");
         if (this.model.userByText().at("Admin") == null)
             this.model.add(newUser(createId(), "Admin", Time.now(), "admin"));
     }
@@ -83,23 +85,18 @@ public final class Controller implements RawController, BasicController {
         final Conversation foundConversation = model.conversationById().first(conversation);
 
         Message message = null;
-        Connection connection = null;
 
         String prevID = "";
 
         try {
-            connection = DataBaseConnection.open();
 
-            Statement stmt = connection.createStatement();
-
-            ResultSet rs = stmt.executeQuery("SELECT * FROM MESSAGES" +
-                    "where CONVERSATIONID = " + SQLFormatter.sqlID(conversation) + " " +
-                    "AND   MNEXTID = 'NULL';");
+            ResultSet rs = DataBaseConnection.dbQuery(  "SELECT * FROM MESSAGES" +
+                                                    "where CONVERSATIONID = " + SQLFormatter.sqlID(conversation) + " " +
+                                                    "AND   MNEXTID = 'NULL';");
             if (rs.next()) {
                 prevID = rs.getString("ID");
             }
             rs.close();
-            stmt.close();
         } catch (Exception e) {
             System.out.println("Error adding message to conversation");
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
@@ -107,19 +104,16 @@ public final class Controller implements RawController, BasicController {
         }
 
         if (SQLFormatter.sqlValidConversation(author, conversation)) {
-            executeUpdate(connection,
-                    "INSERT INTO MESSAGES(ID, USERID, CONVERSATIONID, TimeCreated, MESSAGE)" +
-                            "VALUES(" + SQLFormatter.sqlID(id) + "," + SQLFormatter.sqlID(author) + "," +
-                            SQLFormatter.sqlID(conversation) + "," + SQLFormatter.sqlBody(body) + "," + SQLFormatter.sqlCreationTime(creationTime) + ");";)
+            DataBaseConnection.dbUpdate("INSERT INTO MESSAGES(ID, USERID, CONVERSATIONID, TimeCreated, MESSAGE)" +
+                                    "VALUES(" + SQLFormatter.sqlID(id) + "," + SQLFormatter.sqlID(author) + "," +
+                                    SQLFormatter.sqlID(conversation) + "," + SQLFormatter.sqlBody(body) + "," + SQLFormatter.sqlCreationTime(creationTime) + ");");
             ;
         }
 
         if (!prevID.equals("")) {
             try {
-                executeUpdate(connection,
-                        "UPDATE MESSAGES set MNEXTID = " + SQLFormatter.sqlID(id) + "where CONVERSATIONID = " +
+                DataBaseConnection.dbUpdate("UPDATE MESSAGES set MNEXTID = " + SQLFormatter.sqlID(id) + "where CONVERSATIONID = " +
                                 SQLFormatter.sqlID(conversation) + " AND   MNEXTID = 'NULL';");
-                connection.close();
             } catch (Exception e) {
                 System.err.println(e.getClass().getName() + ": " + e.getMessage());
                 System.exit(0);
@@ -172,10 +166,8 @@ public final class Controller implements RawController, BasicController {
     public User newUser(Uuid id, String name, Time creationTime, String password) {
         User user = null;
         try {
-            Connection connection = DataBaseConnection.open();
             user = new User(id, name, creationTime, password);
-            executeUpdate(connection,
-                    "INSERT INTO USERS (ID,UNAME,TIMECREATED,PASSWORD) " +
+            DataBaseConnection.dbUpdate("INSERT INTO USERS (ID,UNAME,TIMECREATED,PASSWORD) " +
                             "VALUES (" + SQLFormatter.sqlID(id) + ", " + SQLFormatter.sqlName(name) + ", " +
                             SQLFormatter.sqlCreationTime(creationTime) + ", " + SQLFormatter.sqlPassword(password) + ");");
             LOG.info(
@@ -183,7 +175,6 @@ public final class Controller implements RawController, BasicController {
                     user.id,
                     user.name,
                     creationTime);
-            connection.close();
         } catch (Exception e) {
             LOG.info(
                     "newUser fail - Database insertion error (user.id=%s user.name=%s user.time=%s)",
@@ -224,13 +215,9 @@ public final class Controller implements RawController, BasicController {
 
         final User foundOwner = model.userById().first(owner);
         Conversation conversation = null;
-        Connection connection = null;
-        Statement stmt = null;
 
         try {
-            connection = DataBaseConnection.open();
-            executeUpdate(connection,
-                    "INSERT INTO CONVERSATIONS (ID,CNAME,OWNERID,TimeCreated) " +
+            DataBaseConnection.dbUpdate("INSERT INTO CONVERSATIONS (ID,CNAME,OWNERID,TimeCreated) " +
                             "VALUES (" + SQLFormatter.sqlID(id) + ", " + SQLFormatter.sqlName(title) + ", " +
                             SQLFormatter.sqlID(owner) + ", " + SQLFormatter.sqlCreationTime(creationTime) + ");");
 
@@ -245,15 +232,12 @@ public final class Controller implements RawController, BasicController {
         }
 
         try {
-            stmt = connection.createStatement();
 
-            executeUpdate(connection,
-            "INSERT INTO USER_CONVERSATION (ID,USERID,CONVERSATIONID) " +
+            DataBaseConnection.dbUpdate("INSERT INTO USER_CONVERSATION (ID,USERID,CONVERSATIONID) " +
                     "VALUES (" + SQLFormatter.sqlID(id, owner) + ", " + SQLFormatter.sqlID(owner) + ", " + SQLFormatter.sqlID(id) + ");");
 
             LOG.info("User " + conversation.owner + " added to: " + conversation.id);
 
-            connection.close();
         } catch (Exception e) {
             LOG.info(
                     "newConversation fail - Verify connection and try again shortly");

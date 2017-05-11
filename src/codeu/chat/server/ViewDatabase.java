@@ -22,10 +22,8 @@ import codeu.chat.util.store.StoreAccessor;
 public final class ViewDatabase {
 
     private static ResultSet getResultSet(String tableName, Collection<Uuid> ids, boolean exclude, String extraConstraints) {
-        Connection c = DataBaseConnection.open();
         ResultSet rs = null;
         try {
-            Statement stmt = c.createStatement();
             String query = "SELECT * " +
                     " FROM " + tableName;
             if (ids != null && ids.size() != 0) {
@@ -41,21 +39,20 @@ public final class ViewDatabase {
             if (extraConstraints != null)
                 query += " AND " + extraConstraints;
             query += ";";
-            rs = stmt.executeQuery(query);
-            stmt.close();
+            rs = DataBaseConnection.dbQuery(query);
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             System.exit(0);
         }
-        DataBaseConnection.close();
         return rs;
     }
 
     private static Collection<User> buildUserSet(ResultSet rs) {
         final Collection<User> found = new HashSet<>();
-
+        System.out.println("BuildUserSet");
         try {
             while (rs.next()) {
+                System.out.println("Found Users");
                 Uuid userID = Uuid.parse(rs.getString("ID"));
                 String userName = rs.getString("UNAME");
                 Time creationTime = Time.fromMs(rs.getLong("TimeCreated"));
@@ -143,17 +140,12 @@ public final class ViewDatabase {
         final Collection<ConversationSummary> summaries = new ArrayList<>();
 
         try {
-            Connection c=DataBaseConnection.open();
-
-            Statement stmt = c.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * " +
+            ResultSet rs = DataBaseConnection.dbQuery("SELECT * " +
                     "FROM CONVERSATIONS;");
             Collection<Conversation> convs = buildConversationSet(rs);
-            for (Conversation c : convs)
-                summaries.add(ConversationSummary.fromConversation(c));
-            stmt.close();
+            for (Conversation conversation : convs)
+                summaries.add(ConversationSummary.fromConversation(conversation));
 
-            DataBaseConnection.close();
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             System.exit(0);
@@ -187,15 +179,16 @@ public final class ViewDatabase {
         }
 
         try {
-            Connection c=DataBaseConnection.open();
 
-            Statement stmt = c.createStatement();
-            rs = stmt.executeQuery("SELECT * " +
+            rs = DataBaseConnection.dbQuery("SELECT * " +
                     "FROM USERS " +
                     parameters + ";");
-            stmt.close();
 
-            DataBaseConnection.close();
+            while (rs.next())
+            {
+                System.out.println(rs.getString("UNAME"));
+            }
+
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             System.exit(0);
@@ -207,17 +200,13 @@ public final class ViewDatabase {
         ResultSet rs = null;
 
         try {
-            Connection c = DataBaseConnection.open();
 
-            Statement stmt = c.createStatement();
-            rs = stmt.executeQuery("SELECT * " +
+            rs = DataBaseConnection.dbQuery("SELECT * " +
                     "FROM CONVERSATIONS " +
                     "WHERE TimeCreated > " + SQLFormatter.sqlCreationTime(start) +
                     " AND TimeCreated < " + SQLFormatter.sqlCreationTime(end) +
                     " ORDER BY TimeCreated ASC;");
-            stmt.close();
 
-            DataBaseConnection.close();
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             System.exit(0);
@@ -230,15 +219,11 @@ public final class ViewDatabase {
         ResultSet rs = null;
 
         try {
-            Connection c = DataBaseConnection.open();
 
-            Statement stmt = c.createStatement();
-            rs = stmt.executeQuery("SELECT * " +
+            rs = DataBaseConnection.dbQuery("SELECT * " +
                     "FROM CONVERSATIONS " +
                     "WHERE CNAME LIKE '%" + filter + "%';");
-            stmt.close();
 
-            DataBaseConnection.close();
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             System.exit(0);
@@ -251,18 +236,14 @@ public final class ViewDatabase {
         ResultSet rs = null;
 
         try {
-            Connection c = DataBaseConnection.open();
 
-            Statement stmt = c.createStatement();
-            rs = stmt.executeQuery("SELECT * " +
+            rs = DataBaseConnection.dbQuery("SELECT * " +
                     "FROM CONVERSATIONS " +
                     "WHERE TimeCreated > " + SQLFormatter.sqlCreationTime(start) +
                     " AND TimeCreated < " + SQLFormatter.sqlCreationTime(end) +
                     " AND CONVERSATIONID = " + SQLFormatter.sqlID(conversation) +
                     " ORDER BY TimeCreated ASC;");
-            stmt.close();
 
-            DataBaseConnection.close();
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             System.exit(0);
