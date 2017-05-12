@@ -107,7 +107,6 @@ public final class Controller implements RawController, BasicController {
             DataBaseConnection.dbUpdate("INSERT INTO MESSAGES(ID, USERID, CONVERSATIONID, TimeCreated, MESSAGE)" +
                                     "VALUES(" + SQLFormatter.sqlID(id) + "," + SQLFormatter.sqlID(author) + "," +
                                     SQLFormatter.sqlID(conversation) + "," + SQLFormatter.sqlBody(body) + "," + SQLFormatter.sqlCreationTime(creationTime) + ");");
-            ;
         }
 
         if (!prevID.equals("")) {
@@ -165,47 +164,26 @@ public final class Controller implements RawController, BasicController {
     @Override
     public User newUser(Uuid id, String name, Time creationTime, String password) {
         User user = null;
-        try {
+
+        if (isIdFree(id)) {
+
             user = new User(id, name, creationTime, password);
-            DataBaseConnection.dbUpdate("INSERT INTO USERS (ID,UNAME,TIMECREATED,PASSWORD) " +
-                            "VALUES (" + SQLFormatter.sqlID(id) + ", " + SQLFormatter.sqlName(name) + ", " +
-                            SQLFormatter.sqlCreationTime(creationTime) + ", " + SQLFormatter.sqlPassword(password) + ");");
+            model.add(user);
+
             LOG.info(
                     "newUser success (user.id=%s user.name=%s user.time=%s)",
-                    user.id,
-                    user.name,
+                    id,
+                    name,
                     creationTime);
-        } catch (Exception e) {
+
+        } else {
+
             LOG.info(
-                    "newUser fail - Database insertion error (user.id=%s user.name=%s user.time=%s)",
-                    user.id,
-                    user.name,
+                    "newUser fail - id in use (user.id=%s user.name=%s user.time=%s)",
+                    id,
+                    name,
                     creationTime);
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-            System.exit(0);
         }
-
-        // ---------------------------------------------------------------------
-        // PREVIOUS MODEL
-    /*if (isIdFree(id)) {
-      user = new User(id, name, creationTime, password);
-      model.add(user);
-
-      LOG.info(
-          "newUser success (user.id=%s user.name=%s user.time=%s)",
-          id,
-          name,
-          creationTime);
-
-    } else {
-
-      LOG.info(
-          "newUser fail - id in use (user.id=%s user.name=%s user.time=%s)",
-          id,
-          name,
-          creationTime);
-    }*/
-        // ---------------------------------------------------------------------
 
         return user;
     }
@@ -214,46 +192,15 @@ public final class Controller implements RawController, BasicController {
     public Conversation newConversation(Uuid id, String title, Uuid owner, Time creationTime) {
 
         final User foundOwner = model.userById().first(owner);
+
         Conversation conversation = null;
 
-        try {
-            DataBaseConnection.dbUpdate("INSERT INTO CONVERSATIONS (ID,CNAME,OWNERID,TimeCreated) " +
-                            "VALUES (" + SQLFormatter.sqlID(id) + ", " + SQLFormatter.sqlName(title) + ", " +
-                            SQLFormatter.sqlID(owner) + ", " + SQLFormatter.sqlCreationTime(creationTime) + ");");
-
+        if (foundOwner != null && isIdFree(id)) {
             conversation = new Conversation(id, owner, creationTime, title);
+            model.add(conversation);
 
             LOG.info("Conversation added: " + conversation.id);
-        } catch (Exception e) {
-            LOG.info(
-                    "newConversation fail - Verify connection and try again shortly");
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-            System.exit(0);
         }
-
-        try {
-
-            DataBaseConnection.dbUpdate("INSERT INTO USER_CONVERSATION (ID,USERID,CONVERSATIONID) " +
-                    "VALUES (" + SQLFormatter.sqlID(id, owner) + ", " + SQLFormatter.sqlID(owner) + ", " + SQLFormatter.sqlID(id) + ");");
-
-            LOG.info("User " + conversation.owner + " added to: " + conversation.id);
-
-        } catch (Exception e) {
-            LOG.info(
-                    "newConversation fail - Verify connection and try again shortly");
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-            System.exit(0);
-        }
-
-        // ---------------------------------------------------------------------
-        // PREVIOUS MODEL
-    /*if (foundOwner != null && isIdFree(id)) {
-      conversation = new Conversation(id, owner, creationTime, title);
-      model.add(conversation);
-
-      LOG.info("Conversation added: " + conversation.id);
-    }*/
-        // ---------------------------------------------------------------------
 
         return conversation;
     }

@@ -16,11 +16,9 @@ package codeu.chat.server;
 
 import java.util.Comparator;
 
-import codeu.chat.common.Conversation;
-import codeu.chat.common.ConversationSummary;
-import codeu.chat.common.LinearUuidGenerator;
-import codeu.chat.common.Message;
-import codeu.chat.common.User;
+import codeu.chat.codeU_db.DataBaseConnection;
+import codeu.chat.common.*;
+import codeu.chat.util.Logger;
 import codeu.chat.util.Time;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.store.Store;
@@ -53,6 +51,8 @@ public final class Model {
 
   private static final Comparator<String> STRING_COMPARE = String.CASE_INSENSITIVE_ORDER;
 
+  private final static Logger.Log LOG = Logger.newLog(Model.class);
+
   private final Store<Uuid, User> userById = new Store<>(UUID_COMPARE);
   private final Store<Time, User> userByTime = new Store<>(TIME_COMPARE);
   private final Store<String, User> userByText = new Store<>(STRING_COMPARE);
@@ -69,11 +69,28 @@ public final class Model {
   private Uuid currentUserGeneration = userGenerations.make();
 
   public void add(User user) {
+
     currentUserGeneration = userGenerations.make();
 
-    userById.insert(user.id, user);
-    userByTime.insert(user.creation, user);
-    userByText.insert(user.name, user);
+    try {
+      user = new User(user.id, user.name, user.creation, user.password);
+      DataBaseConnection.dbUpdate("INSERT INTO USERS (ID,UNAME,TIMECREATED,PASSWORD) " +
+              "VALUES (" + SQLFormatter.sqlID(user.id) + ", " + SQLFormatter.sqlName(user.name) + ", " +
+              SQLFormatter.sqlCreationTime(user.creation) + ", " + SQLFormatter.sqlPassword(user.password) + ");");
+      LOG.info(
+              "newUser success (user.id=%s user.name=%s user.time=%s)",
+              user.id,
+              user.name,
+              user.creation);
+    } catch (Exception e) {
+      LOG.info(
+              "newUser fail - Database insertion error (user.id=%s user.name=%s user.time=%s)",
+              user.id,
+              user.name,
+              user.creation);
+      System.err.println(e.getClass().getName() + ": " + e.getMessage());
+      System.exit(0);
+    }
   }
 
   public StoreAccessor<Uuid, User> userById() {
@@ -93,9 +110,33 @@ public final class Model {
   }
 
   public void add(Conversation conversation) {
-    conversationById.insert(conversation.id, conversation);
-    conversationByTime.insert(conversation.creation, conversation);
-    conversationByText.insert(conversation.title, conversation);
+
+    try {
+      DataBaseConnection.dbUpdate("INSERT INTO CONVERSATIONS (ID,CNAME,OWNERID,TimeCreated) " +
+              "VALUES (" + SQLFormatter.sqlID(conversation.id) + ", " + SQLFormatter.sqlName(conversation.title) + ", " +
+              SQLFormatter.sqlID(conversation.owner) + ", " + SQLFormatter.sqlCreationTime(conversation.creation) + ");");
+
+      LOG.info("Conversation added: " + conversation.id);
+    } catch (Exception e) {
+      LOG.info(
+              "newConversation fail - Verify connection and try again shortly");
+      System.err.println(e.getClass().getName() + ": " + e.getMessage());
+      System.exit(0);
+    }
+
+    try {
+
+      DataBaseConnection.dbUpdate("INSERT INTO USER_CONVERSATION (ID,USERID,CONVERSATIONID) " +
+              "VALUES (" + SQLFormatter.sqlID(conversation.id, conversation.owner) + ", " + SQLFormatter.sqlID(conversation.owner) + ", " + SQLFormatter.sqlID(conversation.id) + ");");
+
+      LOG.info("User " + conversation.owner + " added to: " + conversation.id);
+
+    } catch (Exception e) {
+      LOG.info(
+              "newConversation fail - Verify connection and try again shortly");
+      System.err.println(e.getClass().getName() + ": " + e.getMessage());
+      System.exit(0);
+    }
   }
 
   public StoreAccessor<Uuid, Conversation> conversationById() {
