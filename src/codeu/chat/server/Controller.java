@@ -86,7 +86,7 @@ public final class Controller implements RawController, BasicController {
 
         Message message = null;
 
-        String prevID = "";
+        Collection<Message> prevMessage = model.messageById();
 
         try {
 
@@ -191,11 +191,9 @@ public final class Controller implements RawController, BasicController {
     @Override
     public Conversation newConversation(Uuid id, String title, Uuid owner, Time creationTime) {
 
-        final User foundOwner = model.userById().first(owner);
-
         Conversation conversation = null;
 
-        if (foundOwner != null && isIdFree(id)) {
+        if (isIdFree(id)) {
             conversation = new Conversation(id, owner, creationTime, title);
             model.add(conversation);
 
@@ -223,7 +221,7 @@ public final class Controller implements RawController, BasicController {
     }
 
     private boolean isIdInUse(Uuid id) {
-        return model.messageById().first(id) != null ||
+        return model.messageById("*", "MESSAGE", "ID = " + id.toString(), null) != null ||
                 model.conversationById().first(id) != null ||
                 model.userById().first(id) != null;
     }

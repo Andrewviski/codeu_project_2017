@@ -1,9 +1,18 @@
 package codeu.chat.codeU_db;
 
+import codeu.chat.common.Conversation;
+import codeu.chat.common.Message;
+import codeu.chat.common.User;
+import codeu.chat.util.*;
+
 import java.sql.*;
+import java.sql.Time;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Optional;
 
 public final class DataBaseConnection{
+
     private static Connection c = null;
     private static Statement stmt = null;
 
@@ -29,6 +38,142 @@ public final class DataBaseConnection{
         }
         return c;
     }
+
+    public static void close(){
+        try {
+            c.close();
+            c=null;
+        }catch ( Exception e ) {
+            System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+            System.exit(0);
+        }
+    }
+
+    public static boolean dbUpdate(String str)
+    {
+        open();
+        boolean status = true;
+        try {
+            stmt = c.createStatement();
+            stmt.executeUpdate(str);
+            stmt.close();
+            c.commit();
+        } catch (Exception e) {
+            System.out.println("Error adding message to conversation");
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            status = false;
+            System.exit(0);
+        }
+        close();
+        return status;
+    }
+
+    public static Collection<User> dbQueryUsers(String str)
+    {
+
+        final Collection<User> found = new HashSet<>();
+
+        open();
+        try {
+
+            Statement stmt = c.createStatement();
+            ResultSet rs = stmt.executeQuery(str);
+
+            while (rs.next())
+            {
+                System.out.println("Found Users");
+                Uuid userID = Uuid.parse(rs.getString("ID"));
+                String userName = rs.getString("UNAME");
+                codeu.chat.util.Time creationTime = codeu.chat.util.Time.fromMs(rs.getLong("TimeCreated"));
+                String userPassword = rs.getString("PASSWORD");
+
+                User user = new User(userID, userName, creationTime, userPassword);
+                found.add(user);
+            }
+
+            stmt.close();
+
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            System.exit(0);
+        }
+
+        close();
+        return found;
+    }
+
+    public static Collection<Conversation> dbQueryConversations(String str)
+    {
+
+        final Collection<Conversation> found = new HashSet<>();
+
+        open();
+        try {
+
+            Statement stmt = c.createStatement();
+            ResultSet rs = stmt.executeQuery(str);
+
+            while (rs.next())
+            {
+                Uuid conversationID = Uuid.parse(rs.getString("ID"));
+                String conversationName = rs.getString("CNAME");
+                codeu.chat.util.Time creationTime = codeu.chat.util.Time.fromMs(rs.getLong("TimeCreated"));
+                Uuid ownerID = Uuid.parse(rs.getString("OWNERID"));
+
+                Conversation conversation = new Conversation(conversationID, ownerID, creationTime, conversationName);
+                found.add(conversation);
+            }
+
+            stmt.close();
+
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            System.exit(0);
+        }
+
+        close();
+        return found;
+    }
+
+    public static Collection<Message> dbQueryMessages(String str)
+    {
+
+        final Collection<Message> found = new HashSet<>();
+
+        open();
+        try {
+
+            Statement stmt = c.createStatement();
+            ResultSet rs = stmt.executeQuery(str);
+
+            while (rs.next())
+            {
+                Uuid messageID = Uuid.parse(rs.getString("ID"));
+                Uuid nextMessageID = Uuid.parse(rs.getString("MNEXTID"));
+                Uuid prevMessageID = Uuid.parse(rs.getString("PNEXTID"));
+                codeu.chat.util.Time creationTime = codeu.chat.util.Time.fromMs(rs.getLong("TimeCreated"));
+                Uuid authorID = Uuid.parse(rs.getString("USERID"));
+                String content = rs.getString("MESSAGE");
+
+                Message message = new Message(messageID, nextMessageID, prevMessageID, creationTime, authorID, content);
+                found.add(message);
+            }
+
+            stmt.close();
+
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            System.exit(0);
+        }
+
+        close();
+        return found;
+    }
+
+    public static Connection getConnection(){
+        return c;
+    }
+
     public static void createTables(){
         c = null;
         open();
@@ -137,61 +282,4 @@ public final class DataBaseConnection{
         }
     }
 
-    public static Connection getConnection(){
-        return c;
-    }
-
-    public static boolean dbUpdate(String str)
-    {
-        open();
-        boolean status = true;
-        try {
-            stmt = c.createStatement();
-            stmt.executeUpdate(str);
-            stmt.close();
-            c.commit();
-        } catch (Exception e) {
-            System.out.println("Error adding message to conversation");
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-            status = false;
-            System.exit(0);
-        }
-        close();
-        return status;
-    }
-
-    public static ResultSet dbQuery(String str)
-    {
-        ResultSet query = null;
-        open();
-        try {
-
-            Statement stmt = c.createStatement();
-            query = stmt.executeQuery(str);
-
-            while (query.next())
-            {
-                System.out.println(query.getString("UNAME"));
-            }
-
-            stmt.close();
-
-        } catch (Exception e) {
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-            System.exit(0);
-        }
-
-        close();
-        return query;
-    }
-
-    public static void close(){
-        try {
-            c.close();
-            c=null;
-        }catch ( Exception e ) {
-            System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-            System.exit(0);
-        }
-    }
 }

@@ -24,6 +24,8 @@ import codeu.chat.util.Time;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.store.Store;
 
+import javax.lang.model.util.SimpleElementVisitor6;
+
 public final class Model {
 
   private static final Comparator<Uuid> UUID_COMPARE = new Comparator<Uuid>() {
