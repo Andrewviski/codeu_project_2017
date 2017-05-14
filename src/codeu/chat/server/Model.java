@@ -14,6 +14,7 @@
 
 package codeu.chat.server;
 
+import java.util.Collection;
 import java.util.Comparator;
 
 import codeu.chat.codeU_db.DataBaseConnection;
@@ -23,6 +24,8 @@ import codeu.chat.util.Time;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.store.Store;
 import codeu.chat.util.store.StoreAccessor;
+
+import javax.lang.model.util.SimpleElementVisitor6;
 
 public final class Model {
 
@@ -157,15 +160,33 @@ public final class Model {
     messageByText.insert(message.content, message);
   }
 
-  public StoreAccessor<Uuid, Message> messageById() {
-    return messageById;
+  public Collection<Message> messageById(String where, String orderBy) {
+    String query = "SELECT * FROM MESSAGE";
+    if(where != null)
+      query += " where " + where;
+    if(orderBy != null)
+      query += " ORDER BY ID " + orderBy;
+    query += ";";
+    return DataBaseConnection.dbQueryMessages(query);
   }
 
-  public StoreAccessor<Time, Message> messageByTime() {
-    return messageByTime;
+  public Collection<Message> messageByTime(String where, String orderBy) {
+    String query = "SELECT * FROM MESSAGE";
+    if(where != null)
+      query += " where " + where;
+    if(orderBy != null)
+      query += " ORDER BY TimeCreated " + orderBy;
+    query += ";";
+    return DataBaseConnection.dbQueryMessages(query);
   }
 
-  public StoreAccessor<String, Message> messageByText() {
-    return messageByText;
+  public Collection<Message> messageByText(String where, String orderBy) {
+    String query = "SELECT * FROM MESSAGE";
+    if(where != null)
+      query += " where " + where;
+    if(orderBy != null)
+      query += " ORDER BY MESSAGE " + orderBy;
+    query += ";";
+    return DataBaseConnection.dbQueryMessages(query);
   }
 }
