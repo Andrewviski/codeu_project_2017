@@ -71,13 +71,15 @@ public final class Model {
   private final Uuid.Generator userGenerations = new LinearUuidGenerator(null, 1, Integer.MAX_VALUE);
   private Uuid currentUserGeneration = userGenerations.make();
 
+  private static DataBaseConnection dbConnection = new DataBaseConnection();
+
   public void add(User user) {
 
     currentUserGeneration = userGenerations.make();
 
     try {
       user = new User(user.id, user.name, user.creation, user.password);
-      DataBaseConnection.dbUpdate("INSERT INTO USERS (ID,UNAME,TIMECREATED,PASSWORD) " +
+      dbConnection.dbUpdate("INSERT INTO USERS (ID,UNAME,TIMECREATED,PASSWORD) " +
               "VALUES (" + SQLFormatter.sqlID(user.id) + ", " + SQLFormatter.sqlName(user.name) + ", " +
               SQLFormatter.sqlCreationTime(user.creation) + ", " + SQLFormatter.sqlPassword(user.password) + ");");
       LOG.info(
@@ -88,6 +90,30 @@ public final class Model {
     } catch (Exception e) {
       LOG.info(
               "newUser fail - Database insertion error (user.id=%s user.name=%s user.time=%s)",
+              user.id,
+              user.name,
+              user.creation);
+      System.err.println(e.getClass().getName() + ": " + e.getMessage());
+      System.exit(0);
+    }
+  }
+
+  public void update(User user) {
+    try {
+      dbConnection.dbUpdate("UPDATE USERS set" +
+                                      " UNAME = " + SQLFormatter.sqlName(user.name) + ", " +
+                                      " TimeCreated = " + SQLFormatter.sqlCreationTime(user.creation) + ", " +
+                                      " UNAME = " + SQLFormatter.sqlName(user.password) +
+                                      " where CONVERSATIONID = " + SQLFormatter.sqlID(user.id) +
+                                      ";");
+      LOG.info(
+              "updateUser success (user.id=%s user.name=%s user.time=%s)",
+              user.id,
+              user.name,
+              user.creation);
+    } catch (Exception e) {
+      LOG.info(
+              "updateUser fail - Database update error (user.id=%s user.name=%s user.time=%s)",
               user.id,
               user.name,
               user.creation);
@@ -115,7 +141,7 @@ public final class Model {
   public void add(Conversation conversation) {
 
     try {
-      DataBaseConnection.dbUpdate("INSERT INTO CONVERSATIONS (ID,CNAME,OWNERID,TimeCreated) " +
+      dbConnection.dbUpdate("INSERT INTO CONVERSATIONS (ID,CNAME,OWNERID,TimeCreated) " +
               "VALUES (" + SQLFormatter.sqlID(conversation.id) + ", " + SQLFormatter.sqlName(conversation.title) + ", " +
               SQLFormatter.sqlID(conversation.owner) + ", " + SQLFormatter.sqlCreationTime(conversation.creation) + ");");
 
@@ -129,7 +155,7 @@ public final class Model {
 
     try {
 
-      DataBaseConnection.dbUpdate("INSERT INTO USER_CONVERSATION (ID,USERID,CONVERSATIONID) " +
+      dbConnection.dbUpdate("INSERT INTO USER_CONVERSATION (ID,USERID,CONVERSATIONID) " +
               "VALUES (" + SQLFormatter.sqlID(conversation.id, conversation.owner) + ", " + SQLFormatter.sqlID(conversation.owner) + ", " + SQLFormatter.sqlID(conversation.id) + ");");
 
       LOG.info("User " + conversation.owner + " added to: " + conversation.id);
@@ -137,6 +163,30 @@ public final class Model {
     } catch (Exception e) {
       LOG.info(
               "newConversation fail - Verify connection and try again shortly");
+      System.err.println(e.getClass().getName() + ": " + e.getMessage());
+      System.exit(0);
+    }
+  }
+
+  public void update(Conversation conversation) {
+    try {
+      dbConnection.dbUpdate("UPDATE CONVERSATIONS set" +
+              " CNAME = " + SQLFormatter.sqlName(conversation.title) + ", " +
+              " OWNERID = " + SQLFormatter.sqlID(conversation.owner) + ", " +
+              " TimeCreated = " + SQLFormatter.sqlCreationTime(conversation.creation) +
+              " where CONVERSATIONID = " + SQLFormatter.sqlID(conversation.id) +
+              ";");
+      LOG.info(
+              "updateConversation success (conversation.id=%s conversation.name=%s conversation.time=%s)",
+              conversation.id,
+              conversation.title,
+              conversation.creation);
+    } catch (Exception e) {
+      LOG.info(
+              "updateConversation fail - Database update error (conversation.id=%s conversation.name=%s conversation.time=%s)",
+              conversation.id,
+              conversation.title,
+              conversation.creation);
       System.err.println(e.getClass().getName() + ": " + e.getMessage());
       System.exit(0);
     }
@@ -154,39 +204,78 @@ public final class Model {
     return conversationByText;
   }
 
-  public void add(Message message) {
-    messageById.insert(message.id, message);
-    messageByTime.insert(message.creation, message);
-    messageByText.insert(message.content, message);
+  public void add(Message message, Uuid conversation) {
+    try {
+      dbConnection.dbUpdate("INSERT INTO MESSAGES (ID,USERID,MNEXTID,MPREVID,CONVERSATIONID,TimeCreated,MESSAGE) " +
+              "VALUES (" +  SQLFormatter.sqlID(message.id) + ", " +
+                            SQLFormatter.sqlID(message.author) + ", " +
+                            SQLFormatter.sqlID(message.previous) + ", " +
+                            SQLFormatter.sqlID(message.next) + ", " +
+                            SQLFormatter.sqlID(conversation) + ", " +
+                            SQLFormatter.sqlCreationTime(message.creation) + ", " +
+                            SQLFormatter.sqlBody(message.content) + ");");
+
+      LOG.info("Message added: " + message.id);
+    } catch (Exception e) {
+      LOG.info(
+              "newMessage fail - Verify connection and try again shortly");
+      System.err.println(e.getClass().getName() + ": " + e.getMessage());
+      System.exit(0);
+    }
+  }
+
+  public void update(Message message) {
+    try {
+      dbConnection.dbUpdate("UPDATE MESSAGES set" +
+              " USERID = " + SQLFormatter.sqlID(message.author) + ", " +
+              " MNEXTID = " + SQLFormatter.sqlID(message.next) + ", " +
+              " MPREVID = " + SQLFormatter.sqlID(message.previous) + ", " +
+              " TimeCreated = " + SQLFormatter.sqlCreationTime(message.creation) + ", " +
+              " MESSAGE = " + SQLFormatter.sqlBody(message.content) +
+              " where CONVERSATIONID = " + SQLFormatter.sqlID(message.id) +
+              ";");
+      LOG.info(
+              "updateMessage success (message.id=%s message.time=%s)",
+              message.id,
+              message.creation);
+    } catch (Exception e) {
+      LOG.info(
+              "updateMessage fail - Database update error (message.id=%s message.time=%s)",
+              message.id,
+              message.creation);
+      System.err.println(e.getClass().getName() + ": " + e.getMessage());
+      System.exit(0);
+    }
   }
 
   public Collection<Message> messageById(String where, String orderBy) {
-    String query = "SELECT * FROM MESSAGE";
+    System.out.println("messagesById");
+    String query = "SELECT * FROM MESSAGES";
     if(where != null)
       query += " where " + where;
     if(orderBy != null)
       query += " ORDER BY ID " + orderBy;
     query += ";";
-    return DataBaseConnection.dbQueryMessages(query);
+    return dbConnection.dbQueryMessages(query);
   }
 
   public Collection<Message> messageByTime(String where, String orderBy) {
-    String query = "SELECT * FROM MESSAGE";
+    String query = "SELECT * FROM MESSAGES";
     if(where != null)
       query += " where " + where;
     if(orderBy != null)
       query += " ORDER BY TimeCreated " + orderBy;
     query += ";";
-    return DataBaseConnection.dbQueryMessages(query);
+    return dbConnection.dbQueryMessages(query);
   }
 
   public Collection<Message> messageByText(String where, String orderBy) {
-    String query = "SELECT * FROM MESSAGE";
+    String query = "SELECT * FROM MESSAGES";
     if(where != null)
       query += " where " + where;
     if(orderBy != null)
       query += " ORDER BY MESSAGE " + orderBy;
     query += ";";
-    return DataBaseConnection.dbQueryMessages(query);
+    return dbConnection.dbQueryMessages(query);
   }
 }

@@ -14,21 +14,33 @@ import codeu.chat.util.Time;
  */
 public class SQLFormatter {
     public static String sqlID(Uuid userID){
-        String sqlID = userID.toString();
-        sqlID = sqlID.replace("[UUID:","");
-        sqlID = sqlID.replace("]","");
-        sqlID = "'" + sqlID + "'";
+        String sqlID = null;
+        if(userID != null) {
+            sqlID = userID.toString();
+            sqlID = sqlID.replace("[UUID:","");
+            sqlID = sqlID.replace("]","");
+            sqlID = "'" + sqlID + "'";
+        }
+
         return sqlID;
     }
 
-    public static String sqlID(Uuid user1ID, Uuid user2ID){
-        String sql1ID = user1ID.toString();
-        String sql2ID = user2ID.toString();
-        sql1ID = sql1ID.replace("[UUID:","");
-        sql1ID = sql1ID.replace("]","");
-        sql2ID = sql2ID.replace("[UUID:","");
-        sql2ID = sql2ID.replace("]","");
-        String sqlID = "'" + sql1ID + sql2ID + "'";
+    public static String sqlID(Uuid userID1, Uuid userID2){
+        String sqlID1 = null;
+        if(userID1 != null) {
+            sqlID1 = userID1.toString();
+            sqlID1 = sqlID1.replace("[UUID:","");
+            sqlID1 = sqlID1.replace("]","");
+        }
+
+        String sqlID2 = null;
+        if(userID2 != null) {
+            sqlID2 = userID2.toString();
+            sqlID2 = sqlID2.replace("[UUID:","");
+            sqlID2 = sqlID2.replace("]","");
+        }
+
+        String sqlID = "'" + sqlID1 + sqlID2 + "'";
         return sqlID;
     }
 

@@ -21,7 +21,29 @@ import codeu.chat.util.store.StoreAccessor;
  */
 public final class ViewDatabase {
 
-    private static ResultSet getResultSet(String tableName, Collection<Uuid> ids, boolean exclude, String extraConstraints) {
+    private  static DataBaseConnection dbConnection = new DataBaseConnection();
+
+    private static String createQuery(String tableName, Collection<Uuid> ids, boolean exclude, String extraConstraints) {
+        String query = "SELECT * " +
+                " FROM " + tableName;
+        if (ids != null && ids.size() != 0) {
+            Uuid[] uids = (Uuid[]) ids.toArray();
+            query += " WHERE  ID ";
+            for (int i = 0; i < uids.length; i++) {
+                query += (exclude) ? " <> " : " = ";
+                query += SQLFormatter.sqlID(uids[i]);
+                if (i != uids.length - 1)
+                    query += " OR ";
+            }
+        }
+        if (extraConstraints != null)
+            query += " AND " + extraConstraints;
+        query += ";";
+
+        return query;
+    }
+
+    /*private static ResultSet getResultSet(String tableName, Collection<Uuid> ids, boolean exclude, String extraConstraints) {
         ResultSet rs = null;
         try {
             String query = "SELECT * " +
@@ -45,7 +67,7 @@ public final class ViewDatabase {
             System.exit(0);
         }
         return rs;
-    }
+    }*/
 
     private static Collection<User> buildUserSet(ResultSet rs) {
         final Collection<User> found = new HashSet<>();
@@ -119,20 +141,20 @@ public final class ViewDatabase {
 
     public static Collection<User> getUsers(Collection<Uuid> ids) {
         System.out.println("Accessing ViewDatabase");
-        ResultSet rs = getResultSet("USERS", ids, false, null);
-        return buildUserSet(rs);
+        Collection<User> users = dbConnection.dbQueryUsers(createQuery("USERS", ids, false, null));
+        return users;
     }
 
     public static Collection<Conversation> getConversations(Collection<Uuid> ids) {
         System.out.println("Accessing ViewDatabase");
-        ResultSet rs = getResultSet("CONVERSATIONS", ids, false, null);
-        return buildConversationSet(rs);
+        Collection<Conversation> conversations = dbConnection.dbQueryConversations(createQuery("CONVERSATIONS", ids, false, null));
+        return conversations;
     }
 
     public static Collection<Message> getMessages(Collection<Uuid> ids) {
         System.out.println("Accessing ViewDatabase");
-        ResultSet rs = getResultSet("MESSAGES", ids, false, null);
-        return buildMessageSet(rs);
+        Collection<Message> messages = dbConnection.dbQueryMessages(createQuery("MESSAGES", ids, false, null));
+        return messages;
     }
 
     public static Collection<ConversationSummary> getAllConversations() {
@@ -140,9 +162,8 @@ public final class ViewDatabase {
         final Collection<ConversationSummary> summaries = new ArrayList<>();
 
         try {
-            ResultSet rs = DataBaseConnection.dbQuery("SELECT * " +
+            Collection<Conversation> convs = dbConnection.dbQueryConversations("SELECT * " +
                     "FROM CONVERSATIONS;");
-            Collection<Conversation> convs = buildConversationSet(rs);
             for (Conversation conversation : convs)
                 summaries.add(ConversationSummary.fromConversation(conversation));
 
@@ -178,76 +199,38 @@ public final class ViewDatabase {
             parameters = "";
         }
 
-        try {
-
-            rs = DataBaseConnection.dbQuery("SELECT * " +
-                    "FROM USERS " +
-                    parameters + ";");
-
-            while (rs.next())
-            {
-                System.out.println(rs.getString("UNAME"));
-            }
-
-        } catch (Exception e) {
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-            System.exit(0);
-        }
-        return buildUserSet(rs);
+        return dbConnection.dbQueryUsers("SELECT * " +
+                "FROM USERS " +
+                parameters + ";");
     }
 
     public static Collection<Conversation> getConversations(Time start, Time end) {
-        ResultSet rs = null;
 
-        try {
-
-            rs = DataBaseConnection.dbQuery("SELECT * " +
-                    "FROM CONVERSATIONS " +
-                    "WHERE TimeCreated > " + SQLFormatter.sqlCreationTime(start) +
-                    " AND TimeCreated < " + SQLFormatter.sqlCreationTime(end) +
-                    " ORDER BY TimeCreated ASC;");
-
-        } catch (Exception e) {
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-            System.exit(0);
-        }
-
-        return buildConversationSet(rs);
+        return dbConnection.dbQueryConversations("SELECT * " +
+                "FROM CONVERSATIONS " +
+                "WHERE TimeCreated > " + SQLFormatter.sqlCreationTime(start) +
+                " AND TimeCreated < " + SQLFormatter.sqlCreationTime(end) +
+                " ORDER BY TimeCreated ASC;");
     }
 
     public static Collection<Conversation> getConversations(String filter) {
-        ResultSet rs = null;
 
-        try {
-
-            rs = DataBaseConnection.dbQuery("SELECT * " +
-                    "FROM CONVERSATIONS " +
-                    "WHERE CNAME LIKE '%" + filter + "%';");
-
-        } catch (Exception e) {
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-            System.exit(0);
-        }
-
-        return buildConversationSet(rs);
+        return dbConnection.dbQueryConversations("SELECT * " +
+                "FROM CONVERSATIONS " +
+                "WHERE CNAME LIKE '%" + filter + "%';");
     }
 
     public static Collection<Message> getMessages(Uuid conversation, Time start, Time end) {
-        ResultSet rs = null;
 
-        try {
+        return dbConnection.dbQueryMessages("SELECT * " +
+                "FROM CONVERSATIONS " +
+                "WHERE TimeCreated > " + SQLFormatter.sqlCreationTime(start) +
+                " AND TimeCreated < " + SQLFormatter.sqlCreationTime(end) +
+                " AND CONVERSATIONID = " + SQLFormatter.sqlID(conversation) +
+                " ORDER BY TimeCreated ASC;");
+    }
 
-            rs = DataBaseConnection.dbQuery("SELECT * " +
-                    "FROM CONVERSATIONS " +
-                    "WHERE TimeCreated > " + SQLFormatter.sqlCreationTime(start) +
-                    " AND TimeCreated < " + SQLFormatter.sqlCreationTime(end) +
-                    " AND CONVERSATIONID = " + SQLFormatter.sqlID(conversation) +
-                    " ORDER BY TimeCreated ASC;");
-
-        } catch (Exception e) {
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-            System.exit(0);
-        }
-        return buildMessageSet(rs);
+    public static Message findMessage(Uuid id) {
+        return dbConnection.dbQueryMessages("SELECT * FROM MESSAGES WHERE ID = " + SQLFormatter.sqlID(id)).iterator().next();
     }
 }

@@ -283,7 +283,7 @@ public final class Server {
                                                 relayConversation.time());
     }
 
-    Message message = model.messageById().first(relayMessage.id());
+    Message message = model.messageById("ID = " + relayMessage.id().toString(), null).iterator().next();
 
     if (message == null) {
       message = controller.newMessage(relayMessage.id(),

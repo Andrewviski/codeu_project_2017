@@ -3,10 +3,9 @@ public class ResetDatabase
 {
     public static void main( String args[] )
     {
-        DataBaseConnection.open();
-        DataBaseConnection.dropTables();
-        DataBaseConnection.createTables();
+        DataBaseConnection connection = new DataBaseConnection();
+        connection.dropTables();
+        connection.createTables();
         System.out.println("Finished Resetting Database Successfully!!!");
-        DataBaseConnection.close();
     }
 }

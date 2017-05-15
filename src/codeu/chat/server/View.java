@@ -27,13 +27,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import codeu.chat.common.BasicView;
-import codeu.chat.common.Conversation;
-import codeu.chat.common.ConversationSummary;
-import codeu.chat.common.LogicalView;
-import codeu.chat.common.Message;
-import codeu.chat.common.SinglesView;
-import codeu.chat.common.User;
+import codeu.chat.codeU_db.DataBaseConnection;
+import codeu.chat.common.*;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Time;
 import codeu.chat.util.Uuid;
@@ -45,37 +40,84 @@ public final class View implements BasicView, LogicalView, SinglesView {
 
   private final Model model;
 
+  private static DataBaseConnection dbConnection = new DataBaseConnection();
+
   public View(Model model) {
     this.model = model;
   }
 
+  private static String createQuery(String tableName, Collection<Uuid> ids, boolean exclude, String extraConstraints) {
+    String query = "SELECT * " +
+            " FROM " + tableName;
+    if (ids != null && ids.size() != 0) {
+      Uuid[] uids = (Uuid[]) ids.toArray();
+      query += " WHERE  ID ";
+      for (int i = 0; i < uids.length; i++) {
+        query += (exclude) ? " <> " : " = ";
+        query += SQLFormatter.sqlID(uids[i]);
+        if (i != uids.length - 1)
+          query += " OR ";
+      }
+    }
+    if (extraConstraints != null)
+      query += " AND " + extraConstraints;
+    query += ";";
+
+    return query;
+  }
 
   @Override
   public Collection<User> getUsers(Collection<Uuid> ids) {
-    return intersect(model.userById(), ids);
+    //return intersect(model.userById(), ids);
+
+    System.out.println("Accessing ViewDatabase");
+    Collection<User> users = dbConnection.dbQueryUsers(createQuery("USERS", ids, false, null));
+    return users;
   }
 
   @Override
   public Collection<ConversationSummary> getAllConversations() {
 
-    final Collection<ConversationSummary> summaries = new ArrayList<>();
+    /*final Collection<ConversationSummary> summaries = new ArrayList<>();
 
     for (final Conversation conversation : model.conversationById().all()) {
         summaries.add(conversation.summary);
     }
 
-    return summaries;
+    return summaries;*/
 
+    final Collection<ConversationSummary> summaries = new ArrayList<>();
+
+    try {
+      Collection<Conversation> convs = dbConnection.dbQueryConversations("SELECT * " +
+              "FROM CONVERSATIONS;");
+      for (Conversation conversation : convs)
+        summaries.add(ConversationSummary.fromConversation(conversation));
+
+    } catch (Exception e) {
+      System.err.println(e.getClass().getName() + ": " + e.getMessage());
+      System.exit(0);
+    }
+
+    return summaries;
   }
 
   @Override
   public Collection<Conversation> getConversations(Collection<Uuid> ids) {
-    return intersect(model.conversationById(), ids);
+    //return intersect(model.conversationById(), ids);
+
+    System.out.println("Accessing ViewDatabase");
+    Collection<Conversation> conversations = dbConnection.dbQueryConversations(createQuery("CONVERSATIONS", ids, false, null));
+    return conversations;
   }
 
   @Override
   public Collection<Message> getMessages(Collection<Uuid> ids) {
-    return intersect(model.messageById(), ids);
+    //return intersect(model.messageById(), ids);
+
+    System.out.println("Accessing ViewDatabase");
+    Collection<Message> messages = dbConnection.dbQueryMessages(createQuery("MESSAGES", ids, false, null));
+    return messages;
   }
 
   @Override
@@ -128,7 +170,7 @@ public final class View implements BasicView, LogicalView, SinglesView {
   @Override
   public Collection<Message> getMessages(Uuid conversation, Time start, Time end) {
 
-    final Conversation foundConversation = model.conversationById().first(conversation);
+    /*final Conversation foundConversation = model.conversationById().first(conversation);
 
     final List<Message> foundMessages = new ArrayList<>();
 
@@ -145,13 +187,20 @@ public final class View implements BasicView, LogicalView, SinglesView {
       current = model.messageById().first(current.next);
     }
 
-    return foundMessages;
+    return foundMessages;*/
+
+    return dbConnection.dbQueryMessages("SELECT * " +
+            "FROM CONVERSATIONS " +
+            "WHERE TimeCreated > " + SQLFormatter.sqlCreationTime(start) +
+            " AND TimeCreated < " + SQLFormatter.sqlCreationTime(end) +
+            " AND CONVERSATIONID = " + SQLFormatter.sqlID(conversation) +
+            " ORDER BY TimeCreated ASC;");
   }
 
   @Override
   public Collection<Message> getMessages(Uuid rootMessage, int range) {
 
-    int remaining = Math.abs(range);
+    /*int remaining = Math.abs(range);
     LOG.info("in getMessage: UUID=%s range=%d", rootMessage, range);
 
     // We want to return the messages in order. If the range was negative
@@ -179,7 +228,11 @@ public final class View implements BasicView, LogicalView, SinglesView {
       }
     }
 
-    return found;
+    return found;*/
+
+    return dbConnection.dbQueryMessages("SELECT * " +
+            "FROM CONVERSATIONS " +
+            " ORDER BY TimeCreated ASC;");
   }
 
   @Override
@@ -189,7 +242,7 @@ public final class View implements BasicView, LogicalView, SinglesView {
   public Conversation findConversation(Uuid id) { return model.conversationById().first(id); }
 
   @Override
-  public Message findMessage(Uuid id) { return model.messageById().first(id); }
+  public Message findMessage(Uuid id) { /*return model.messageById().first(id);*/ return dbConnection.dbQueryMessages("SELECT * FROM MESSAGES WHERE ID = " + SQLFormatter.sqlID(id)).iterator().next(); }
 
   private static <T> Collection<T> intersect(StoreAccessor<Uuid, T> store, Collection<Uuid> ids) {
 
