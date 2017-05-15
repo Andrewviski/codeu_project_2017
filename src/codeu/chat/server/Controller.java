@@ -100,7 +100,7 @@ public final class Controller implements RawController, BasicController {
 
         if (!prevMsgID.equals("")) {
             model.update(updatePrevMessage);
-            message = new Message(id, prevMessage.id, null, creationTime, author, body);
+            message = new Message(id, null, prevMessage.id, creationTime, author, body);
             model.add(message, conversation);
         }
         else {
