@@ -209,8 +209,8 @@ public final class Model {
       dbConnection.dbUpdate("INSERT INTO MESSAGES (ID,USERID,MNEXTID,MPREVID,CONVERSATIONID,TimeCreated,MESSAGE) " +
               "VALUES (" +  SQLFormatter.sqlID(message.id) + ", " +
                             SQLFormatter.sqlID(message.author) + ", " +
-                            SQLFormatter.sqlID(message.previous) + ", " +
                             SQLFormatter.sqlID(message.next) + ", " +
+                            SQLFormatter.sqlID(message.previous) + ", " +
                             SQLFormatter.sqlID(conversation) + ", " +
                             SQLFormatter.sqlCreationTime(message.creation) + ", " +
                             SQLFormatter.sqlBody(message.content) + ");");
