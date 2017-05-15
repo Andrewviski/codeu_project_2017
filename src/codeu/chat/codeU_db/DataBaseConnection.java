@@ -13,8 +13,8 @@ import java.util.Optional;
 
 public final class DataBaseConnection{
 
-    private static Connection c = null;
-    private static Statement stmt = null;
+    private Connection c = null;
+    private Statement stmt = null;
 
     public DataBaseConnection()
     {
@@ -22,7 +22,7 @@ public final class DataBaseConnection{
         stmt = null;
     }
 
-    public static Connection open(){
+    private void open(){
         if(c!=null){
             System.out.println("ERROR: already connected to the Database");
         }else {
@@ -36,10 +36,9 @@ public final class DataBaseConnection{
                 System.exit(0);
             }
         }
-        return c;
     }
 
-    public static void close(){
+    private void close(){
         try {
             c.close();
             c=null;
@@ -49,7 +48,7 @@ public final class DataBaseConnection{
         }
     }
 
-    public static boolean dbUpdate(String str)
+    public boolean dbUpdate(String str)
     {
         open();
         boolean status = true;
@@ -59,7 +58,7 @@ public final class DataBaseConnection{
             stmt.close();
             c.commit();
         } catch (Exception e) {
-            System.out.println("Error adding message to conversation");
+            System.out.println("Error adding element to database");
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             status = false;
             System.exit(0);
@@ -68,7 +67,7 @@ public final class DataBaseConnection{
         return status;
     }
 
-    public static Collection<User> dbQueryUsers(String str)
+    public Collection<User> dbQueryUsers(String str)
     {
 
         final Collection<User> found = new HashSet<>();
@@ -102,7 +101,7 @@ public final class DataBaseConnection{
         return found;
     }
 
-    public static Collection<Conversation> dbQueryConversations(String str)
+    public Collection<Conversation> dbQueryConversations(String str)
     {
 
         final Collection<Conversation> found = new HashSet<>();
@@ -135,11 +134,11 @@ public final class DataBaseConnection{
         return found;
     }
 
-    public static Collection<Message> dbQueryMessages(String str)
+    public Collection<Message> dbQueryMessages(String str)
     {
 
         final Collection<Message> found = new HashSet<>();
-
+        System.out.println("dbQueryMessages");
         open();
         try {
 
@@ -149,8 +148,14 @@ public final class DataBaseConnection{
             while (rs.next())
             {
                 Uuid messageID = Uuid.parse(rs.getString("ID"));
-                Uuid nextMessageID = Uuid.parse(rs.getString("MNEXTID"));
-                Uuid prevMessageID = Uuid.parse(rs.getString("PNEXTID"));
+                String next = rs.getString("MNEXTID");
+                Uuid nextMessageID = null;
+                if(next != null)
+                    nextMessageID = Uuid.parse(next);
+                String prev = rs.getString("MNEXTID");
+                Uuid prevMessageID = null;
+                if(prev != null)
+                    prevMessageID = Uuid.parse(prev);
                 codeu.chat.util.Time creationTime = codeu.chat.util.Time.fromMs(rs.getLong("TimeCreated"));
                 Uuid authorID = Uuid.parse(rs.getString("USERID"));
                 String content = rs.getString("MESSAGE");
@@ -170,11 +175,11 @@ public final class DataBaseConnection{
         return found;
     }
 
-    public static Connection getConnection(){
+    public Connection getConnection(){
         return c;
     }
 
-    public static void createTables(){
+    public void createTables(){
         c = null;
         open();
         try {
@@ -251,7 +256,7 @@ public final class DataBaseConnection{
         System.out.println("Table <MESSAGES> created successfully");
         close();
     }
-    public static void dropTables(){
+    public void dropTables(){
         Statement stmt = null;
         //drop tables before creating them
         try {

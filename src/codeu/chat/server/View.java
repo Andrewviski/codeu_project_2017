@@ -39,10 +39,31 @@ public final class View implements BasicView, LogicalView, SinglesView {
 
   private final Model model;
 
+  private static DataBaseConnection dbConnection = new DataBaseConnection();
+
   public View(Model model) {
     this.model = model;
   }
 
+  private static String createQuery(String tableName, Collection<Uuid> ids, boolean exclude, String extraConstraints) {
+    String query = "SELECT * " +
+            " FROM " + tableName;
+    if (ids != null && ids.size() != 0) {
+      Uuid[] uids = (Uuid[]) ids.toArray();
+      query += " WHERE  ID ";
+      for (int i = 0; i < uids.length; i++) {
+        query += (exclude) ? " <> " : " = ";
+        query += SQLFormatter.sqlID(uids[i]);
+        if (i != uids.length - 1)
+          query += " OR ";
+      }
+    }
+    if (extraConstraints != null)
+      query += " AND " + extraConstraints;
+    query += ";";
+
+    return query;
+  }
 
   @Override
   public Collection<User> getUsers(Collection<Uuid> ids) {
@@ -52,14 +73,28 @@ public final class View implements BasicView, LogicalView, SinglesView {
   @Override
   public Collection<ConversationSummary> getAllConversations() {
 
-    final Collection<ConversationSummary> summaries = new ArrayList<>();
+    /*final Collection<ConversationSummary> summaries = new ArrayList<>();
 
     for (final Conversation conversation : model.getAllConversations(Uuid.NULL)) {
       summaries.add(conversation.summary);
     }
 
-    return summaries;
+    return summaries;*/
 
+    final Collection<ConversationSummary> summaries = new ArrayList<>();
+
+    try {
+      Collection<Conversation> convs = dbConnection.dbQueryConversations("SELECT * " +
+              "FROM CONVERSATIONS;");
+      for (Conversation conversation : convs)
+        summaries.add(ConversationSummary.fromConversation(conversation));
+
+    } catch (Exception e) {
+      System.err.println(e.getClass().getName() + ": " + e.getMessage());
+      System.exit(0);
+    }
+
+    return summaries;
   }
 
   @Override
@@ -110,7 +145,7 @@ public final class View implements BasicView, LogicalView, SinglesView {
   @Override
   public Collection<Message> getMessages(Uuid rootMessage, int range) {
 
-    int remaining = Math.abs(range);
+    /*int remaining = Math.abs(range);
     LOG.info("in getMessage: UUID=%s range=%d", rootMessage, range);
 
     // We want to return the messages in order. If the range was negative
@@ -146,7 +181,11 @@ public final class View implements BasicView, LogicalView, SinglesView {
       }
     }
 
-    return found;
+    return found;*/
+
+    return dbConnection.dbQueryMessages("SELECT * " +
+            "FROM CONVERSATIONS " +
+            " ORDER BY TimeCreated ASC;");
   }
 
   public Collection<User> getRecommendedUsers (Uuid user) {
