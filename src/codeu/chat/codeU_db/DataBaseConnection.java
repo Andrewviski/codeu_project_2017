@@ -152,7 +152,7 @@ public final class DataBaseConnection{
                 Uuid nextMessageID = null;
                 if(next != null)
                     nextMessageID = Uuid.parse(next);
-                String prev = rs.getString("MNEXTID");
+                String prev = rs.getString("MPREVID");
                 Uuid prevMessageID = null;
                 if(prev != null)
                     prevMessageID = Uuid.parse(prev);

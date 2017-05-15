@@ -104,7 +104,7 @@ public final class Model {
                                       " UNAME = " + SQLFormatter.sqlName(user.name) + ", " +
                                       " TimeCreated = " + SQLFormatter.sqlCreationTime(user.creation) + ", " +
                                       " UNAME = " + SQLFormatter.sqlName(user.password) +
-                                      " where CONVERSATIONID = " + SQLFormatter.sqlID(user.id) +
+                                      " where ID = " + SQLFormatter.sqlID(user.id) +
                                       ";");
       LOG.info(
               "updateUser success (user.id=%s user.name=%s user.time=%s)",
@@ -174,7 +174,7 @@ public final class Model {
               " CNAME = " + SQLFormatter.sqlName(conversation.title) + ", " +
               " OWNERID = " + SQLFormatter.sqlID(conversation.owner) + ", " +
               " TimeCreated = " + SQLFormatter.sqlCreationTime(conversation.creation) +
-              " where CONVERSATIONID = " + SQLFormatter.sqlID(conversation.id) +
+              " where ID = " + SQLFormatter.sqlID(conversation.id) +
               ";");
       LOG.info(
               "updateConversation success (conversation.id=%s conversation.name=%s conversation.time=%s)",
@@ -232,7 +232,7 @@ public final class Model {
               " MPREVID = " + SQLFormatter.sqlID(message.previous) + ", " +
               " TimeCreated = " + SQLFormatter.sqlCreationTime(message.creation) + ", " +
               " MESSAGE = " + SQLFormatter.sqlBody(message.content) +
-              " where CONVERSATIONID = " + SQLFormatter.sqlID(message.id) +
+              " where ID = " + SQLFormatter.sqlID(message.id) +
               ";");
       LOG.info(
               "updateMessage success (message.id=%s message.time=%s)",
