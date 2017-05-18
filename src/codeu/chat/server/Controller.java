@@ -45,9 +45,8 @@ public final class Controller implements RawController, BasicController {
     public Controller(Uuid serverId, Model model) {
         this.model = model;
         this.uuidGenerator = new RandomUuidGenerator(serverId, System.currentTimeMillis());
-        newUser("Admin", "admin");
-        if (this.model.userByText().at("Admin") == null)
-            this.model.add(newUser(createId(), "Admin", Time.now(), "admin"));
+        if (this.model.userByText("UNAME = 'Admin'", null).isEmpty())
+            this.model.add(new User(createId(), "Admin", Time.now(), "admin"));
     }
 
     @Override
@@ -65,47 +64,23 @@ public final class Controller implements RawController, BasicController {
         return newConversation(createId(), title, owner, Time.now());
     }
 
-    private void executeUpdate(Connection connection, String sql) {
-        try {
-            Statement stmt = connection.createStatement();
-            stmt.executeUpdate(sql);
-            stmt.close();
-            connection.commit();
-        } catch (Exception e) {
-            System.out.println("Error adding message to conversation");
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-            System.exit(0);
-        }
-    }
-
     @Override
     public Message newMessage(Uuid id, Uuid author, Uuid conversation, String body, Time creationTime) {
 
-        final User foundUser = model.userById().first(author);
-        final Conversation foundConversation = model.conversationById().first(conversation);
-
-        Collection<Message> prevMessages = model.messageById("MNEXTID IS NULL AND CONVERSATIONID = " +SQLFormatter.sqlID(conversation), null);
+        Collection<Message> prevMessages = model.messageByTime("MNEXTID == '0' AND CONVERSATIONID = " +SQLFormatter.sqlID(conversation), "DESC");
 
         Message message = null;
         Message prevMessage = null;
-        Message updatePrevMessage = null;
-
-        String prevMsgID = "";
 
         if(!prevMessages.isEmpty()) {
             prevMessage = prevMessages.iterator().next();
-            updatePrevMessage = new Message(prevMessage.id, id, prevMessage.previous, prevMessage.creation, prevMessage.author, prevMessage.content);
-            prevMsgID = prevMessage.id.toString();
-        }
-
-        if (!prevMsgID.equals("")) {
-            model.update(updatePrevMessage);
-            message = new Message(id, null, prevMessage.id, creationTime, author, body);
+            prevMessage.next = id;
+            model.update(prevMessage);
+            message = new Message(id, Uuid.NULL, prevMessage.id, creationTime, author, body);
             model.add(message, conversation);
         }
         else {
-            System.out.println("Expected Path");
-            message = new Message(id, null, null, creationTime, author, body);
+            message = new Message(id, Uuid.NULL, Uuid.NULL, creationTime, author, body);
             model.add(message, conversation);
         }
         return message;
@@ -157,12 +132,9 @@ public final class Controller implements RawController, BasicController {
     private Uuid createId() {
 
         Uuid candidate;
-        System.out.println("Not Looping");
         for (candidate = uuidGenerator.make();
              isIdInUse(candidate);
              candidate = uuidGenerator.make()) {
-
-            System.out.println(candidate.toString());
 
             // Assuming that "randomUuid" is actually well implemented, this
             // loop should never be needed, but just incase make sure that the
@@ -174,17 +146,13 @@ public final class Controller implements RawController, BasicController {
     }
 
     private boolean isIdInUse(Uuid id) {
-        System.out.println("isIdInUse");
-        System.out.println(!model.messageById("ID = " + SQLFormatter.sqlID(id), null).isEmpty() ||
-                model.conversationById().first(id) != null ||
-                model.userById().first(id) != null);
-        return !model.messageById("ID = " + SQLFormatter.sqlID(id), null).isEmpty() ||
-                model.conversationById().first(id) != null ||
-                model.userById().first(id) != null;
+        String findID = "ID = " + SQLFormatter.sqlID(id);
+        return !model.messageById(findID, null).isEmpty() ||
+                !model.conversationById(findID, null).isEmpty() ||
+                !model.userById(findID, null).isEmpty();
     }
 
     private boolean isIdFree(Uuid id) {
-        System.out.println("isIdFree");
         return !isIdInUse(id);
     }
 

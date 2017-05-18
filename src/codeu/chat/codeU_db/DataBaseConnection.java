@@ -7,9 +7,7 @@ import codeu.chat.util.*;
 
 import java.sql.*;
 import java.sql.Time;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Optional;
+import java.util.*;
 
 public final class DataBaseConnection{
 
@@ -75,12 +73,11 @@ public final class DataBaseConnection{
         open();
         try {
 
-            Statement stmt = c.createStatement();
+            stmt = c.createStatement();
             ResultSet rs = stmt.executeQuery(str);
 
             while (rs.next())
             {
-                System.out.println("Found Users");
                 Uuid userID = Uuid.parse(rs.getString("ID"));
                 String userName = rs.getString("UNAME");
                 codeu.chat.util.Time creationTime = codeu.chat.util.Time.fromMs(rs.getLong("TimeCreated"));
@@ -90,6 +87,7 @@ public final class DataBaseConnection{
                 found.add(user);
             }
 
+            rs.close();
             stmt.close();
 
         } catch (Exception e) {
@@ -104,12 +102,12 @@ public final class DataBaseConnection{
     public Collection<Conversation> dbQueryConversations(String str)
     {
 
-        final Collection<Conversation> found = new HashSet<>();
+        final Collection<Conversation> found = new ArrayList<>();
 
         open();
         try {
 
-            Statement stmt = c.createStatement();
+            stmt = c.createStatement();
             ResultSet rs = stmt.executeQuery(str);
 
             while (rs.next())
@@ -123,6 +121,114 @@ public final class DataBaseConnection{
                 found.add(conversation);
             }
 
+            rs.close();
+            stmt.close();
+
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            System.exit(0);
+        }
+
+        close();
+        return found;
+    }
+
+    public Uuid getConversationData(String str) {
+
+        Uuid found = null;
+
+        open();
+        try {
+
+            stmt = c.createStatement();
+            ResultSet rs = stmt.executeQuery(str);
+
+            if(rs.next()) {
+                if(rs.getString("ID") == null)
+                    found = Uuid.NULL;
+                else
+                    found = Uuid.parse(rs.getString("ID"));
+            }
+
+            rs.close();
+            stmt.close();
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            System.exit(0);
+        }
+
+        close();
+        return found;
+    }
+
+    public Uuid getConversationID(String str) {
+
+        Uuid found = null;
+
+        open();
+        try {
+
+            stmt = c.createStatement();
+            ResultSet rs = stmt.executeQuery(str);
+
+            if(rs.next()) {
+                found = Uuid.parse(rs.getString("CONVERSATIONID"));
+            }
+
+            rs.close();
+            stmt.close();
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            System.exit(0);
+        }
+
+        close();
+        return found;
+    }
+
+    public Collection<Uuid> getUsersInConversations(String str) {
+        final Collection<Uuid> found = new HashSet<>();
+
+        open();
+        try {
+
+            stmt = c.createStatement();
+            ResultSet rs = stmt.executeQuery(str);
+
+            while (rs.next())
+            {
+                Uuid userID = Uuid.parse(rs.getString("USERID"));
+                found.add(userID);
+            }
+
+            rs.close();
+            stmt.close();
+
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            System.exit(0);
+        }
+
+        close();
+        return found;
+    }
+
+    public Collection<Uuid> getConversationsOfUser(String str) {
+        final Collection<Uuid> found = new HashSet<>();
+
+        open();
+        try {
+
+            stmt = c.createStatement();
+            ResultSet rs = stmt.executeQuery(str);
+
+            while (rs.next())
+            {
+                Uuid userID = Uuid.parse(rs.getString("CONVERSATIONID"));
+                found.add(userID);
+            }
+
+            rs.close();
             stmt.close();
 
         } catch (Exception e) {
@@ -137,8 +243,7 @@ public final class DataBaseConnection{
     public Collection<Message> dbQueryMessages(String str)
     {
 
-        final Collection<Message> found = new HashSet<>();
-        System.out.println("dbQueryMessages");
+        final Collection<Message> found = new ArrayList<>();
         open();
         try {
 
@@ -149,11 +254,11 @@ public final class DataBaseConnection{
             {
                 Uuid messageID = Uuid.parse(rs.getString("ID"));
                 String next = rs.getString("MNEXTID");
-                Uuid nextMessageID = null;
+                Uuid nextMessageID = Uuid.NULL;
                 if(next != null)
                     nextMessageID = Uuid.parse(next);
                 String prev = rs.getString("MPREVID");
-                Uuid prevMessageID = null;
+                Uuid prevMessageID = Uuid.NULL;
                 if(prev != null)
                     prevMessageID = Uuid.parse(prev);
                 codeu.chat.util.Time creationTime = codeu.chat.util.Time.fromMs(rs.getLong("TimeCreated"));
@@ -164,6 +269,7 @@ public final class DataBaseConnection{
                 found.add(message);
             }
 
+            rs.close();
             stmt.close();
 
         } catch (Exception e) {

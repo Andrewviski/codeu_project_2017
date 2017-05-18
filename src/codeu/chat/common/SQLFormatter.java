@@ -14,7 +14,7 @@ import codeu.chat.util.Time;
  */
 public class SQLFormatter {
     public static String sqlID(Uuid userID){
-        String sqlID = null;
+        String sqlID = "NULL";
         if(userID != null) {
             sqlID = userID.toString();
             sqlID = sqlID.replace("[UUID:","");
@@ -26,14 +26,14 @@ public class SQLFormatter {
     }
 
     public static String sqlID(Uuid userID1, Uuid userID2){
-        String sqlID1 = null;
+        String sqlID1 = "NULL";
         if(userID1 != null) {
             sqlID1 = userID1.toString();
             sqlID1 = sqlID1.replace("[UUID:","");
             sqlID1 = sqlID1.replace("]","");
         }
 
-        String sqlID2 = null;
+        String sqlID2 = "NULL";
         if(userID2 != null) {
             sqlID2 = userID2.toString();
             sqlID2 = sqlID2.replace("[UUID:","");
@@ -64,6 +64,11 @@ public class SQLFormatter {
     public static String sqlBody(String userBody){
         String sqlBody = "'" + userBody + "'";
         return sqlBody;
+    }
+
+    public static String sqlContainsText(String text) {
+        String sqlConstainsText = "'%" + text + "%'";
+        return sqlConstainsText;
     }
 
     public static boolean sqlValidConversation(Uuid userID, Uuid conversationID){

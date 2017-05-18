@@ -16,6 +16,7 @@ package codeu.chat.server;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 
 import codeu.chat.codeU_db.DataBaseConnection;
 import codeu.chat.common.*;
@@ -122,16 +123,34 @@ public final class Model {
     }
   }
 
-  public StoreAccessor<Uuid, User> userById() {
-    return userById;
+  public Collection<User> userById(String where, String orderBy) {
+    String query = "SELECT * FROM USERS";
+    if(where != null)
+      query += " where " + where;
+    if(orderBy != null)
+      query += " ORDER BY ID " + orderBy;
+    query += ";";
+    return dbConnection.dbQueryUsers(query);
   }
 
-  public StoreAccessor<Time, User> userByTime() {
-    return userByTime;
+  public Collection<User> userByTime(String where, String orderBy) {
+    String query = "SELECT * FROM USERS";
+    if(where != null)
+      query += " where " + where;
+    if(orderBy != null)
+      query += " ORDER BY TimeCreated " + orderBy;
+    query += ";";
+    return dbConnection.dbQueryUsers(query);
   }
 
-  public StoreAccessor<String, User> userByText() {
-    return userByText;
+  public Collection<User> userByText(String where, String orderBy) {
+    String query = "SELECT * FROM USERS";
+    if(where != null)
+      query += " where " + where;
+    if(orderBy != null)
+      query += " ORDER BY UNAME " + orderBy;
+    query += ";";
+    return dbConnection.dbQueryUsers(query);
   }
 
   public Uuid userGeneration() {
@@ -153,16 +172,17 @@ public final class Model {
       System.exit(0);
     }
 
+    add(conversation.owner, conversation.id);
+  }
+
+  // Add user to a conversation
+  public void add(Uuid user, Uuid conversation) {
     try {
-
-      dbConnection.dbUpdate("INSERT INTO USER_CONVERSATION (ID,USERID,CONVERSATIONID) " +
-              "VALUES (" + SQLFormatter.sqlID(conversation.id, conversation.owner) + ", " + SQLFormatter.sqlID(conversation.owner) + ", " + SQLFormatter.sqlID(conversation.id) + ");");
-
-      LOG.info("User " + conversation.owner + " added to: " + conversation.id);
-
+      dbConnection.dbUpdate("INSERT INTO USER_CONVERSATION (ID, USERID, CONVERSATIONID) " +
+                            "VALUES (" + SQLFormatter.sqlID(user, conversation) + ", " + SQLFormatter.sqlID(user) + ", " + SQLFormatter.sqlID(conversation) + ");");
     } catch (Exception e) {
       LOG.info(
-              "newConversation fail - Verify connection and try again shortly");
+              "Adding user to conversation fail - Verify connection and try again shortly");
       System.err.println(e.getClass().getName() + ": " + e.getMessage());
       System.exit(0);
     }
@@ -192,16 +212,50 @@ public final class Model {
     }
   }
 
-  public StoreAccessor<Uuid, Conversation> conversationById() {
-    return conversationById;
+  public Collection<Conversation> conversationById(String where, String orderBy) {
+
+    Collection<Conversation> conversations = new HashSet<>();
+
+    String query = "SELECT * FROM CONVERSATIONS";
+    if(where != null)
+      query += " where " + where;
+    if(orderBy != null)
+      query += " ORDER BY ID " + orderBy;
+    query += ";";
+
+    Collection<Conversation> found = dbConnection.dbQueryConversations(query);
+
+    for(Conversation conv : found) {
+      conv.firstMessage = dbConnection.getConversationData("SELECT * FROM MESSAGES where CONVERSATIONID = " + SQLFormatter.sqlID(conv.id) + " AND MPREVID = " + SQLFormatter.sqlID(Uuid.NULL) + ";");
+      if(conv.firstMessage == null)
+          conv.firstMessage = Uuid.NULL;
+      conv.lastMessage = dbConnection.getConversationData("SELECT * FROM MESSAGES where CONVERSATIONID = " + SQLFormatter.sqlID(conv.id) + " AND MNEXTID = " + SQLFormatter.sqlID(Uuid.NULL) + ";");
+      conv.users = dbConnection.getUsersInConversations("SELECT * FROM USER_CONVERSATION where CONVERSATIONID = " + SQLFormatter.sqlID(conv.id) + ";");
+
+      conversations.add(conv);
+    }
+
+    return conversations;
   }
 
-  public StoreAccessor<Time, Conversation> conversationByTime() {
-    return conversationByTime;
+  public Collection<Conversation> conversationByTime(String where, String orderBy) {
+    String query = "SELECT * FROM CONVERSATIONS";
+    if(where != null)
+      query += " where " + where;
+    if(orderBy != null)
+      query += " ORDER BY TimeCreated " + orderBy;
+    query += ";";
+    return dbConnection.dbQueryConversations(query);
   }
 
-  public StoreAccessor<String, Conversation> conversationByText() {
-    return conversationByText;
+  public Collection<Conversation> conversationByText(String where, String orderBy) {
+    String query = "SELECT * FROM CONVERSATIONS";
+    if(where != null)
+      query += " where " + where;
+    if(orderBy != null)
+      query += " ORDER BY CNAME " + orderBy;
+    query += ";";
+    return dbConnection.dbQueryConversations(query);
   }
 
   public void add(Message message, Uuid conversation) {
@@ -226,11 +280,11 @@ public final class Model {
 
   public void update(Message message) {
     try {
-      dbConnection.dbUpdate("UPDATE MESSAGES set" +
-              " USERID = " + SQLFormatter.sqlID(message.author) + ", " +
-              " MNEXTID = " + SQLFormatter.sqlID(message.next) + ", " +
-              " MPREVID = " + SQLFormatter.sqlID(message.previous) + ", " +
-              " TimeCreated = " + SQLFormatter.sqlCreationTime(message.creation) + ", " +
+      dbConnection.dbUpdate("UPDATE MESSAGES SET" +
+              " USERID = " + SQLFormatter.sqlID(message.author) + "," +
+              " MNEXTID = " + SQLFormatter.sqlID(message.next) + "," +
+              " MPREVID = " + SQLFormatter.sqlID(message.previous) + "," +
+              " TimeCreated = " + SQLFormatter.sqlCreationTime(message.creation) + "," +
               " MESSAGE = " + SQLFormatter.sqlBody(message.content) +
               " where ID = " + SQLFormatter.sqlID(message.id) +
               ";");
@@ -249,7 +303,6 @@ public final class Model {
   }
 
   public Collection<Message> messageById(String where, String orderBy) {
-    System.out.println("messagesById");
     String query = "SELECT * FROM MESSAGES";
     if(where != null)
       query += " where " + where;
@@ -277,5 +330,13 @@ public final class Model {
       query += " ORDER BY MESSAGE " + orderBy;
     query += ";";
     return dbConnection.dbQueryMessages(query);
+  }
+
+  public Uuid conversationID(String where) {
+    String query = "SELECT CONVERSATIONID FROM MESSAGES";
+    if(where != null)
+      query += " where " + where;
+    query += ";";
+    return dbConnection.getConversationID(query);
   }
 }

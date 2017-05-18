@@ -23,21 +23,13 @@ import java.net.Socket;
 import java.util.Arrays;
 import java.util.Collection;
 
-import codeu.chat.common.Conversation;
-import codeu.chat.common.ConversationSummary;
-import codeu.chat.common.LinearUuidGenerator;
-import codeu.chat.common.Message;
-import codeu.chat.common.NetworkCode;
-import codeu.chat.common.Relay;
-import codeu.chat.common.User;
+import codeu.chat.common.*;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Serializers;
 import codeu.chat.util.Time;
 import codeu.chat.util.Timeline;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.connections.Connection;
-
-import codeu.chat.server.ViewDatabase;
 
 public final class Server {
 
@@ -160,14 +152,14 @@ public final class Server {
 
       final Collection<Uuid> ids = Serializers.collection(Uuid.SERIALIZER).read(in);
 
-      final Collection<User> users = ViewDatabase.getUsers(ids);
+      final Collection<User> users = view.getUsers(ids);
 
       Serializers.INTEGER.write(out, NetworkCode.GET_USERS_BY_ID_RESPONSE);
       Serializers.collection(User.SERIALIZER).write(out, users);
 
     } else if (type == NetworkCode.GET_ALL_CONVERSATIONS_REQUEST) {
 
-      final Collection<ConversationSummary> conversations = ViewDatabase.getAllConversations();
+      final Collection<ConversationSummary> conversations = view.getAllConversations();
 
       Serializers.INTEGER.write(out, NetworkCode.GET_ALL_CONVERSATIONS_RESPONSE);
       Serializers.collection(ConversationSummary.SERIALIZER).write(out, conversations);
@@ -176,7 +168,7 @@ public final class Server {
 
       final Collection<Uuid> ids = Serializers.collection(Uuid.SERIALIZER).read(in);
 
-      final Collection<Conversation> conversations = ViewDatabase.getConversations(ids);
+      final Collection<Conversation> conversations = view.getConversations(ids);
 
       Serializers.INTEGER.write(out, NetworkCode.GET_CONVERSATIONS_BY_ID_RESPONSE);
       Serializers.collection(Conversation.SERIALIZER).write(out, conversations);
@@ -185,7 +177,7 @@ public final class Server {
 
       final Collection<Uuid> ids = Serializers.collection(Uuid.SERIALIZER).read(in);
 
-      final Collection<Message> messages = ViewDatabase.getMessages(ids);
+      final Collection<Message> messages = view.getMessages(ids);
 
       Serializers.INTEGER.write(out, NetworkCode.GET_MESSAGES_BY_ID_RESPONSE);
       Serializers.collection(Message.SERIALIZER).write(out, messages);
@@ -199,7 +191,7 @@ public final class Server {
 
       final Collection<Uuid> ids = Serializers.collection(Uuid.SERIALIZER).read(in);
 
-      final Collection<User> users = ViewDatabase.getUsersExcluding(ids);
+      final Collection<User> users = view.getUsersExcluding(ids);
 
       Serializers.INTEGER.write(out, NetworkCode.GET_USERS_EXCLUDING_RESPONSE);
       Serializers.collection(User.SERIALIZER).write(out, users);
@@ -209,7 +201,7 @@ public final class Server {
       final Time startTime = Time.SERIALIZER.read(in);
       final Time endTime = Time.SERIALIZER.read(in);
 
-      final Collection<Conversation> conversations = ViewDatabase.getConversations(startTime, endTime);
+      final Collection<Conversation> conversations = view.getConversations(startTime, endTime);
 
       Serializers.INTEGER.write(out, NetworkCode.GET_CONVERSATIONS_BY_TIME_RESPONSE);
       Serializers.collection(Conversation.SERIALIZER).write(out, conversations);
@@ -218,7 +210,7 @@ public final class Server {
 
       final String filter = Serializers.STRING.read(in);
 
-      final Collection<Conversation> conversations = ViewDatabase.getConversations(filter);
+      final Collection<Conversation> conversations = view.getConversations(filter);
 
       Serializers.INTEGER.write(out, NetworkCode.GET_CONVERSATIONS_BY_TITLE_RESPONSE);
       Serializers.collection(Conversation.SERIALIZER).write(out, conversations);
@@ -229,7 +221,7 @@ public final class Server {
       final Time startTime = Time.SERIALIZER.read(in);
       final Time endTime = Time.SERIALIZER.read(in);
 
-      final Collection<Message> messages = ViewDatabase.getMessages(conversation, startTime, endTime);
+      final Collection<Message> messages = view.getMessages(conversation, startTime, endTime);
 
       Serializers.INTEGER.write(out, NetworkCode.GET_MESSAGES_BY_TIME_RESPONSE);
       Serializers.collection(Message.SERIALIZER).write(out, messages);
@@ -264,13 +256,13 @@ public final class Server {
 
     String password = "Temporal Password for Relay";
 
-    User user = model.userById().first(relayUser.id());
+    User user = model.userById("ID = " + SQLFormatter.sqlID(relayUser.id()), null).iterator().next();
 
     if (user == null) {
       user = controller.newUser(relayUser.id(), relayUser.text(), relayUser.time(), password);
     }
 
-    Conversation conversation = model.conversationById().first(relayConversation.id());
+    Conversation conversation = model.conversationById("ID = " + SQLFormatter.sqlID(relayConversation.id()), null).iterator().next();
 
     if (conversation == null) {
 
