@@ -68,7 +68,7 @@ public final class Conversation {
   public final Uuid owner;
   public final Time creation;
   public final String title;
-  public final Collection<Uuid> users = new HashSet<>();
+  public Collection<Uuid> users = new HashSet<>();
   public Uuid firstMessage = Uuid.NULL;
   public Uuid lastMessage = Uuid.NULL;
 
