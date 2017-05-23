@@ -103,7 +103,7 @@ public final class ClientMessage {
 
     if (message == null) {
       System.out.format("Error: message not created - %s.\n",
-          (validInputs) ? "server error" : "bad input value");
+              (validInputs) ? "server error" : "bad input value");
     } else {
       LOG.info("New message:, Author= %s UUID= %s", author, message.id);
       current = message;
@@ -156,7 +156,7 @@ public final class ClientMessage {
       // Fetch/refetch all the messages.
       conversationContents.clear();
       LOG.info("Refetch all messages: replaceAll=%s firstMessage=%s", replaceAll,
-               conversationHead.firstMessage);
+              conversationHead.firstMessage);
       return conversationHead.firstMessage;
     } else {
       // Locate last known message. Its next, if any, becomes our starting point.
@@ -197,8 +197,8 @@ public final class ClientMessage {
       LOG.info("ConversationHead is null");
     } else {
       LOG.info("ConversationHead: Title=\"%s\" UUID=%s first=%s last=%s\n",
-          conversationHead.title, conversationHead.id, conversationHead.firstMessage,
-          conversationHead.lastMessage);
+              conversationHead.title, conversationHead.id, conversationHead.firstMessage,
+              conversationHead.lastMessage);
 
       Uuid nextMessageId = getCurrentMessageFetchId(replaceAll);
 
@@ -236,7 +236,7 @@ public final class ClientMessage {
       final String authorName = (userContext == null) ? null : userContext.getName(m.author);
 
       System.out.format(" Author: %s   Id: %s created: %s\n   Body: %s\n",
-          (authorName == null) ? m.author : authorName, m.id, m.creation, m.content);
+              (authorName == null) ? m.author : authorName, m.id, m.creation, m.content);
     }
   }
 

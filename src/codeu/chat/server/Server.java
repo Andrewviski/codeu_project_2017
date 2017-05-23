@@ -23,13 +23,7 @@ import java.net.Socket;
 import java.util.Arrays;
 import java.util.Collection;
 
-import codeu.chat.common.Conversation;
-import codeu.chat.common.ConversationSummary;
-import codeu.chat.common.LinearUuidGenerator;
-import codeu.chat.common.Message;
-import codeu.chat.common.NetworkCode;
-import codeu.chat.common.Relay;
-import codeu.chat.common.User;
+import codeu.chat.common.*;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Serializers;
 import codeu.chat.util.Time;
@@ -137,8 +131,9 @@ public final class Server {
     } else if (type == NetworkCode.NEW_USER_REQUEST) {
 
       final String name = Serializers.STRING.read(in);
+      final String password = Serializers.STRING.read(in);
 
-      final User user = controller.newUser(name);
+      final User user = controller.newUser(name, password);
 
       Serializers.INTEGER.write(out, NetworkCode.NEW_USER_RESPONSE);
       Serializers.nullable(User.SERIALIZER).write(out, user);
@@ -259,13 +254,15 @@ public final class Server {
     final Relay.Bundle.Component relayConversation = bundle.conversation();
     final Relay.Bundle.Component relayMessage = bundle.user();
 
-    User user = model.userById().first(relayUser.id());
+    String password = "Temporal Password for Relay";
+
+    User user = model.userById("ID = " + SQLFormatter.sqlID(relayUser.id()), null).iterator().next();
 
     if (user == null) {
-      user = controller.newUser(relayUser.id(), relayUser.text(), relayUser.time());
+      user = controller.newUser(relayUser.id(), relayUser.text(), relayUser.time(), password);
     }
 
-    Conversation conversation = model.conversationById().first(relayConversation.id());
+    Conversation conversation = model.conversationById("ID = " + SQLFormatter.sqlID(relayConversation.id()), null).iterator().next();
 
     if (conversation == null) {
 
@@ -278,7 +275,7 @@ public final class Server {
                                                 relayConversation.time());
     }
 
-    Message message = model.messageById().first(relayMessage.id());
+    Message message = model.messageById("ID = " + relayMessage.id().toString(), null).iterator().next();
 
     if (message == null) {
       message = controller.newMessage(relayMessage.id(),
