@@ -167,6 +167,22 @@ public final class Model {
       System.exit(0);
     }
   }
+  public void addUserToConversation(Conversation conversation,User user){
+    try {
+      dbConnection.dbUpdate("INSERT INTO USER_CONVERSATION (ID,USERID,CONVERSATIONID) " +
+              "VALUES ("
+              + SQLFormatter.sqlID(conversation.id, user.id) + ", "
+              + SQLFormatter.sqlID(user.id) + ", "
+              + SQLFormatter.sqlID(conversation.id) + ");");
+
+      LOG.info("User " + user.id+ " to conversation " + conversation.id);
+    } catch (Exception e) {
+      LOG.info(
+              "adding user failed - Verify connection and try again shortly");
+      System.err.println(e.getClass().getName() + ": " + e.getMessage());
+      System.exit(0);
+    }
+  }
 
   public void update(Conversation conversation) {
     try {
