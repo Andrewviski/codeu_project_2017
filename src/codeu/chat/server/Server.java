@@ -165,7 +165,7 @@ public final class Server {
       if (issuerId == userId || user == null)
         response = false;
 
-      cont
+      controller.
       Serializers.INTEGER.write(out, NetworkCode.ADD_USER_TO_CONVERSATION_RESPONSE);
       Serializers.nullable(User.SERIALIZER).write(out, response);
 
