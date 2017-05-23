@@ -162,4 +162,8 @@ public final class ClientUser {
     public static void printUser(User user) {
         System.out.println(getUserInfoString(user));
     }
+
+    public User getByName(String name){
+        return usersByName.first(name);
+    }
 }
