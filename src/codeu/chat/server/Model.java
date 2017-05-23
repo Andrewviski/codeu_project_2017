@@ -480,7 +480,7 @@ public final class Model {
       System.exit(0);
     }
   }
-  public void addUserToConversation(Conversation conversation,User user){
+  public boolean addUserToConversation(Conversation conversation,User user){
     try {
       dbConnection.dbUpdate("INSERT INTO USER_CONVERSATION (ID,USERID,CONVERSATIONID) " +
               "VALUES ("
@@ -489,11 +489,12 @@ public final class Model {
               + SQLFormatter.sqlID(conversation.id) + ");");
 
       LOG.info("User " + user.id+ " to conversation " + conversation.id);
+      return true;
     } catch (Exception e) {
       LOG.info(
               "adding user failed - Verify connection and try again shortly");
       System.err.println(e.getClass().getName() + ": " + e.getMessage());
-      System.exit(0);
+      return false;
     }
   }
 

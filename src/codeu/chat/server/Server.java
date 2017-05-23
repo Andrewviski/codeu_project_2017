@@ -140,34 +140,38 @@ public final class Server {
       final Uuid issuerId = Uuid.SERIALIZER.read(in);
       final Uuid userId = Uuid.SERIALIZER.read(in);
       final Uuid conversationId = Uuid.SERIALIZER.read(in);
-      boolean response = true;
+      boolean response = controller.addUserToConversation(issuerId, userId, conversationId);
 
       // TODO: make code cleaner here
 
       //check conversation exists
       Collection<Uuid> temp = new HashSet<Uuid>();
       temp.add(conversationId);
-      Conversation conv = (Conversation) ViewDatabase.getConversations(temp).toArray()[0];
+      Conversation conv = (Conversation) view.getConversations(temp).toArray()[0];
       if (conv == null)
         response = false;
 
       //check issuer exist and he is owner of the conversation
       temp.clear();
       temp.add(issuerId);
-      User issuer = (User) ViewDatabase.getUsers(temp).toArray()[0];
+      User issuer = (User) view.getUsers(temp).toArray()[0];
       if (issuer == null || (!issuer.id.equals(conv.owner.id())))
         response = false;
 
       //make sure the added user exist and not same as owner
       temp.clear();
       temp.add(userId);
-      User user = (User) ViewDatabase.getUsers(temp).toArray()[0];
+      User user = (User) view.getUsers(temp).toArray()[0];
       if (issuerId == userId || user == null)
         response = false;
 
-      controller.
+
+      //try to insert in db
+      if(!controller.addUserToConversation(conv,user))
+        response=false;
+
       Serializers.INTEGER.write(out, NetworkCode.ADD_USER_TO_CONVERSATION_RESPONSE);
-      Serializers.nullable(User.SERIALIZER).write(out, response);
+      Serializers.BOOLEAN.write(out, response);
 
     } else if (type == NetworkCode.NEW_USER_REQUEST) {
 

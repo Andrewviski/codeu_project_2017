@@ -31,6 +31,7 @@ import javax.swing.plaf.nimbus.State;
 import java.sql.*;
 import java.util.Date;
 import java.text.SimpleDateFormat;
+import java.util.HashSet;
 
 import codeu.chat.common.SQLFormatter;
 
@@ -138,22 +139,14 @@ public final class Controller implements RawController, BasicController {
     return user;
   }
 
-  @Override
-  public Conversation newConversation(Uuid id, String title, Uuid owner, Time creationTime) {
 
-    Conversation conversation = null;
+  public boolean addUserToConversation(Conversation conversation,User user) {
+    return model.addUserToConversation(conversation,user);
 
-    if (isIdFree(id)) {
-      conversation = new Conversation(id, owner, creationTime, title);
-      model.add(conversation);
-
-      LOG.info("Conversation added: " + conversation.id);
-    }
-
-    return conversation;
   }
 
-  public Conversation addUserToConversation(Uuid id, String title, Uuid owner, Time creationTime) {
+  @Override
+  public Conversation newConversation(Uuid id, String title, Uuid owner, Time creationTime) {
 
     Conversation conversation = null;
 
