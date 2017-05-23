@@ -24,6 +24,7 @@ import codeu.chat.common.Message;
 import codeu.chat.common.NetworkCode;
 import codeu.chat.common.User;
 import codeu.chat.util.Logger;
+import codeu.chat.util.Serializer;
 import codeu.chat.util.Serializers;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.connections.Connection;
@@ -91,7 +92,7 @@ public class Controller implements BasicController {
   }
 
   @Override
-  public Conversation newConversation(String title, Uuid owner)  {
+  public Conversation newConversation(String title, Uuid owner) {
 
     Conversation response = null;
 
@@ -103,6 +104,32 @@ public class Controller implements BasicController {
 
       if (Serializers.INTEGER.read(connection.in()) == NetworkCode.NEW_CONVERSATION_RESPONSE) {
         response = Serializers.nullable(Conversation.SERIALIZER).read(connection.in());
+      } else {
+        LOG.error("Response from server failed.");
+      }
+    } catch (Exception ex) {
+      System.out.println("ERROR: Exception during call on server. Check log for details.");
+      LOG.error(ex, "Exception during call on server.");
+    }
+
+    return response;
+  }
+
+  public boolean addUserToConversation(Uuid issuerId, Uuid userId, Uuid conversationId) {
+
+    boolean response = false;
+
+    try (final Connection connection = source.connect()) {
+
+      Serializers.INTEGER.write(connection.out(), NetworkCode.ADD_USER_TO_CONVERSATION_REQUEST);
+      Uuid.SERIALIZER.write(connection.out(), issuerId);
+      Uuid.SERIALIZER.write(connection.out(), userId);
+      Uuid.SERIALIZER.write(connection.out(), conversationId);
+      LOG.info("addUserToConversation: Request completed.");
+
+      if (Serializers.INTEGER.read(connection.in()) == NetworkCode.ADD_USER_TO_CONVERSATION_RESPONSE) {
+        response = Serializers.BOOLEAN.read(connection.in());
+        LOG.info("addUserToConversation: Response completed.");
       } else {
         LOG.error("Response from server failed.");
       }

@@ -20,6 +20,7 @@ import java.util.Map;
 
 import codeu.chat.common.Conversation;
 import codeu.chat.common.ConversationSummary;
+import codeu.chat.common.User;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Method;
 import codeu.chat.util.Uuid;
@@ -100,6 +101,19 @@ public final class ClientConversation {
             LOG.info("New conversation: Title= \"%s\" UUID= %s", conv.title, conv.id);
 
             currentSummary = conv.summary;
+
+            updateAllConversations(currentSummary != null);
+        }
+    }
+
+    public void addUser(Uuid userId,Uuid issuerId) {
+        final boolean response=controller.addUserToConversation(issuerId,userId,currentConversation.id);
+        if (response == false) {
+            System.out.format("Error: cannot add %s to current conversation- %s.\n server failure");
+        } else {
+            LOG.info("New user in conversation conversation: Title= \"%s\" UUID= %s",currentConversation.title, currentConversation.id);
+
+            currentSummary = currentConversation.summary;
 
             updateAllConversations(currentSummary != null);
         }

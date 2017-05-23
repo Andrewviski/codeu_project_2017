@@ -22,6 +22,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import codeu.chat.common.Conversation;
 import codeu.chat.common.ConversationSummary;
@@ -38,6 +40,8 @@ import codeu.chat.util.Uuid;
 import codeu.chat.util.connections.Connection;
 
 import codeu.chat.server.ViewDatabase;
+
+import javax.jws.soap.SOAPBinding;
 
 public final class Server {
 
@@ -97,8 +101,8 @@ public final class Server {
           LOG.info("Handling connection...");
 
           final boolean success = onMessage(
-              connection.in(),
-              connection.out());
+                  connection.in(),
+                  connection.out());
 
           LOG.info("Connection handled: %s", success ? "ACCEPTED" : "REJECTED");
         } catch (Exception ex) {
@@ -132,9 +136,43 @@ public final class Server {
       Serializers.nullable(Message.SERIALIZER).write(out, message);
 
       timeline.scheduleNow(createSendToRelayEvent(
-          author,
-          conversation,
-          message.id));
+              author,
+              conversation,
+              message.id));
+
+    } else if (type == NetworkCode.ADD_USER_TO_CONVERSATION_REQUEST) {
+
+      final Uuid issuerId = Uuid.SERIALIZER.read(in);
+      final Uuid userId = Uuid.SERIALIZER.read(in);
+      final Uuid conversationId = Uuid.SERIALIZER.read(in);
+      boolean response = true;
+
+      // TODO: make code cleaner here
+
+      //check conversation exists
+      Collection<Uuid> temp = new HashSet<Uuid>();
+      temp.add(conversationId);
+      Conversation conv = (Conversation) ViewDatabase.getConversations(temp).toArray()[0];
+      if (conv == null)
+        response = false;
+
+      //check issuer exist and he is owner of the conversation
+      temp.clear();
+      temp.add(issuerId);
+      User issuer = (User) ViewDatabase.getUsers(temp).toArray()[0];
+      if (issuer == null || (!issuer.id.equals(conv.owner.id())))
+        response = false;
+
+      //make sure the added user exist and not same as owner
+      temp.clear();
+      temp.add(userId);
+      User user = (User) ViewDatabase.getUsers(temp).toArray()[0];
+      if (issuerId == userId || user == null)
+        response = false;
+
+      cont
+      Serializers.INTEGER.write(out, NetworkCode.ADD_USER_TO_CONVERSATION_RESPONSE);
+      Serializers.nullable(User.SERIALIZER).write(out, response);
 
     } else if (type == NetworkCode.NEW_USER_REQUEST) {
 
@@ -278,19 +316,19 @@ public final class Server {
       // has a message in the conversation will get ownership over this server's copy
       // of the conversation.
       conversation = controller.newConversation(relayConversation.id(),
-                                                relayConversation.text(),
-                                                user.id,
-                                                relayConversation.time());
+              relayConversation.text(),
+              user.id,
+              relayConversation.time());
     }
 
     Message message = model.messageById("ID = " + relayMessage.id().toString(), null).iterator().next();
 
     if (message == null) {
       message = controller.newMessage(relayMessage.id(),
-                                      user.id,
-                                      conversation.id,
-                                      relayMessage.text(),
-                                      relayMessage.time());
+              user.id,
+              conversation.id,
+              relayMessage.text(),
+              relayMessage.time());
     }
   }
 
@@ -304,10 +342,10 @@ public final class Server {
         final Conversation conversation = view.findConversation(conversationId);
         final Message message = view.findMessage(messageId);
         relay.write(id,
-                    secret,
-                    relay.pack(user.id, user.name, user.creation),
-                    relay.pack(conversation.id, conversation.title, conversation.creation),
-                    relay.pack(message.id, message.content, message.creation));
+                secret,
+                relay.pack(user.id, user.name, user.creation),
+                relay.pack(conversation.id, conversation.title, conversation.creation),
+                relay.pack(message.id, message.content, message.creation));
       }
     };
   }
