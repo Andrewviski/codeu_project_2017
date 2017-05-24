@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 if [[ "$1" == 'test' ]];then
-     java -cp ./third_party/sqlite-jdbc-3.16.1.jar:./bin codeu.chat.ServerMain 100 'ABABAB' 2222 '.'
+     java -cp ./third_party/sqlite-jdbc-3.16.1.jar:./third_party/stanford-postagger-2011-04-20/stanford-postagger.jar:./bin codeu.chat.ServerMain 100 'ABABAB' 2222 '.'
 else
     TEAM_ID="$1"
     TEAM_SECRET="$2"
@@ -44,13 +44,13 @@ else
 
 
     if [ "$RELAY_ADDRESS" == "" ] ; then
-      java -cp ./third_party/sqlite-jdbc-3.16.1.jar:./bin codeu.chat.ServerMain \
+      java -cp ./third_party/sqlite-jdbc-3.16.1.jar:./third_party/stanford-postagger-2011-04-20/stanford-postagger.jar:./bin codeu.chat.ServerMain \
           "$TEAM_ID" \
           "$TEAM_SECRET" \
           "$PORT" \
           "$PERSISTENT_DIR"
     else
-      java -cp ./third_party/sqlite-jdbc-3.16.1.jar:./bin codeu.chat.ServerMain \
+      java -cp ./third_party/sqlite-jdbc-3.16.1.jar:./third_party/stanford-postagger-2011-04-20/stanford-postagger.jar:./bin codeu.chat.ServerMain \
           "$TEAM_ID" \
           "$TEAM_SECRET" \
           "$PORT" \
