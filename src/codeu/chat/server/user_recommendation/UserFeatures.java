@@ -15,10 +15,10 @@ public class UserFeatures {
     int cluster;
     private NavigableMap<String, Mood> interests;
 
-    UserFeatures(Uuid userID) {
+    public UserFeatures(Uuid userID) {
         this.userID = userID;
         cluster = -1;
-        interests = new TreeMap<String, Mood>();
+        interests = new TreeMap<>();
     }
 
     public void SetMood(String keyWord, Mood values) {
@@ -47,5 +47,13 @@ public class UserFeatures {
         keyWords.addAll(interests.keySet());
 
         return keyWords;
+    }
+
+    public void setCluster(int cluster) {
+        this.cluster = cluster;
+    }
+
+    public int getCluster() {
+        return cluster;
     }
 }

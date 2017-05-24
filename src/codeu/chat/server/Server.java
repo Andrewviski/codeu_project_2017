@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import codeu.chat.common.*;
+import codeu.chat.server.user_recommendation.K_Means;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Serializers;
 import codeu.chat.util.Time;
@@ -46,16 +47,21 @@ public final class Server {
   private final View view = new View(model);
   private final Controller controller;
 
+  private final K_Means clusterer;
+
   private final Relay relay;
   private Uuid lastSeen = Uuid.NULL;
 
-  public Server(final Uuid id, final byte[] secret, final Relay relay) {
+  public Server(final Uuid id, final byte[] secret, final Relay relay) throws IOException, ClassNotFoundException{
 
     this.id = id;
     this.secret = Arrays.copyOf(secret, secret.length);
 
     this.controller = new Controller(id, model);
     this.relay = relay;
+
+    //Add a Serializer entry to run the clusterer with a Client Entry
+    this.clusterer = new K_Means(model);
 
     timeline.scheduleNow(new Runnable() {
       @Override
