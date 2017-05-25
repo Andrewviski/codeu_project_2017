@@ -57,6 +57,10 @@ public final class ClientUser {
     return clean;
   }
 
+  static public boolean isValidPassword(String passWord) {
+    return passWord != "";
+  }
+
   public boolean hasCurrent() {
     return (current != null);
   }
@@ -71,10 +75,9 @@ public final class ClientUser {
     if (name != null) {
       final User newCurrent = usersByName.first(name);
       if (newCurrent != null) {
-        if(newCurrent.password.equals(password)){
+        if (newCurrent.password.equals(password)) {
           current = newCurrent;
-        }
-        else {
+        } else {
           System.out.println("Wrong Password");
         }
       }
@@ -92,17 +95,22 @@ public final class ClientUser {
     printUser(current);
   }
 
-  public void addUser(String name, String password) {
-    final boolean validInputs = isValidName(name);
-
-    final User user = (validInputs) ? controller.newUser(name, password) : null;
-
-    if (user == null) {
-      System.out.format("Error: user not created - %s.\n",
-          (validInputs) ? "server failure" : "bad input value");
+  public String addUser(String name, String password) {
+    if (/*current == null ||  !current.name.equals("Admin")*/ false) {
+      return "Must be Admin!";
     } else {
-      LOG.info("New user complete, Name= \"%s\" UUID=%s", user.name, user.id);
-      updateUsers();
+      final boolean validInputs = isValidName(name) && isValidPassword(password);
+
+      final User user = (validInputs) ? controller.newUser(name, password) : null;
+
+      if (user == null) {
+        return String.format("Error: user not created - [0].\n",
+            (validInputs) ? "server failure" : "bad input value");
+      } else {
+        LOG.info("New user complete, Name= \"%s\" UUID=%s", user.name, user.id);
+        updateUsers();
+      }
+      return "User Added successfully!";
     }
   }
 

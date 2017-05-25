@@ -23,13 +23,7 @@ import java.net.Socket;
 import java.util.Arrays;
 import java.util.Collection;
 
-import codeu.chat.common.Conversation;
-import codeu.chat.common.ConversationSummary;
-import codeu.chat.common.LinearUuidGenerator;
-import codeu.chat.common.Message;
-import codeu.chat.common.NetworkCode;
-import codeu.chat.common.Relay;
-import codeu.chat.common.User;
+import codeu.chat.common.*;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Serializers;
 import codeu.chat.util.Time;
@@ -262,13 +256,13 @@ public final class Server {
 
     String password = "Temporal Password for Relay";
 
-    User user = model.userById().first(relayUser.id());
+    User user = model.userById("ID = " + SQLFormatter.sqlID(relayUser.id()), null).iterator().next();
 
     if (user == null) {
       user = controller.newUser(relayUser.id(), relayUser.text(), relayUser.time(), password);
     }
 
-    Conversation conversation = model.conversationById().first(relayConversation.id());
+    Conversation conversation = model.conversationById("ID = " + SQLFormatter.sqlID(relayConversation.id()), null).iterator().next();
 
     if (conversation == null) {
 
@@ -276,19 +270,19 @@ public final class Server {
       // has a message in the conversation will get ownership over this server's copy
       // of the conversation.
       conversation = controller.newConversation(relayConversation.id(),
-                                                relayConversation.text(),
-                                                user.id,
-                                                relayConversation.time());
+          relayConversation.text(),
+          user.id,
+          relayConversation.time());
     }
 
-    Message message = model.messageById().first(relayMessage.id());
+    Message message = model.messageById("ID = " + relayMessage.id().toString(), null).iterator().next();
 
     if (message == null) {
       message = controller.newMessage(relayMessage.id(),
-                                      user.id,
-                                      conversation.id,
-                                      relayMessage.text(),
-                                      relayMessage.time());
+          user.id,
+          conversation.id,
+          relayMessage.text(),
+          relayMessage.time());
     }
   }
 
@@ -302,10 +296,10 @@ public final class Server {
         final Conversation conversation = view.findConversation(conversationId);
         final Message message = view.findMessage(messageId);
         relay.write(id,
-                    secret,
-                    relay.pack(user.id, user.name, user.creation),
-                    relay.pack(conversation.id, conversation.title, conversation.creation),
-                    relay.pack(message.id, message.content, message.creation));
+            secret,
+            relay.pack(user.id, user.name, user.creation),
+            relay.pack(conversation.id, conversation.title, conversation.creation),
+            relay.pack(message.id, message.content, message.creation));
       }
     };
   }

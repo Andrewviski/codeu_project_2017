@@ -21,6 +21,8 @@ import codeu.chat.client.Controller;
 import codeu.chat.client.View;
 import codeu.chat.common.ConversationSummary;
 import codeu.chat.util.Logger;
+import codeu.chat.util.Uuid;
+
 import java.io.Console;
 
 // Chat - top-level client application.
@@ -49,13 +51,14 @@ public final class Chat {
     System.out.println("   sign-in <username>  - sign in as user <username>.");
     System.out.println("   sign-out  - sign out current user.");
     System.out.println("   current   - show current user, conversation, message.");
-    System.out.println("User commands:");
+    System.out.println("User commands: [Require admin privileges]");
     System.out.println("   u-add <name>  - add a new user.");
     System.out.println("   u-list-all    - list all users known to system.");
     System.out.println("Conversation commands:");
     System.out.println("   c-add <title>    - add a new conversation.");
     System.out.println("   c-list-all       - list all conversations known to system.");
     System.out.println("   c-select <index> - select conversation from list.");
+    System.out.println("   c-add-user <username> - add a new user to the current conversation.");
     System.out.println("Message commands:");
     System.out.println("   m-add <body>     - add a new message to the current conversation.");
     System.out.println("   m-list-all       - list all messages in the current conversation.");
@@ -118,7 +121,6 @@ public final class Chat {
         String user = tokenScanner.next().trim();
         char passwordArray[] = console.readPassword("Enter password for new user: ");
         String password = new String(passwordArray);
-        password = password.trim();
         addUser(user, password);
       }
 
@@ -146,6 +148,17 @@ public final class Chat {
     } else if (token.equals("c-select")) {
 
       selectConversation(lineScanner);
+    } else if (token.equals("c-add-user")) {
+      if (!tokenScanner.hasNext()) {
+        System.out.print("ERROR: Username not supplied.");
+      } else {
+        String user = tokenScanner.next().trim();
+        if (!clientContext.conversation.hasCurrent()) {
+          System.out.println("ERROR: no conversation selected.");
+        } else {
+          addUserToCoversation(clientContext.user.getCurrent().id, clientContext.conversation.getCurrent());
+        }
+      }
 
     } else if (token.equals("m-add")) {
 
@@ -202,6 +215,10 @@ public final class Chat {
     tokenScanner.close();
   }
 
+  private void addUserToCoversation(Uuid id, ConversationSummary current) {
+
+  }
+
   // Sign in a user.
   private void signInUser(String name, String password) {
     if (!clientContext.user.signInUser(name, password)) {
@@ -222,7 +239,7 @@ public final class Chat {
       System.out.println(" -- no messages in conversation --");
     } else {
       System.out.format(" conversation has %d messages.\n",
-                        clientContext.conversation.currentMessageCount());
+          clientContext.conversation.currentMessageCount());
       if (!clientContext.message.hasCurrent()) {
         System.out.println(" -- no current message --");
       } else {
@@ -277,7 +294,9 @@ public final class Chat {
 
   // Add a new user.
   private void addUser(String name, String password) {
-    clientContext.user.addUser(name, password);
+    String ret = clientContext.user.addUser(name, password);
+    if (ret != null)
+      System.out.println(ret);
   }
 
   // Display all users known to server.

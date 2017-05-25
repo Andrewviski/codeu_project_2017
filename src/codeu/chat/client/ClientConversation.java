@@ -76,7 +76,9 @@ public final class ClientConversation {
     return currentSummary;
   }
 
-  public Uuid getCurrentId() { return (currentSummary != null) ? currentSummary.id : null; }
+  public Uuid getCurrentId() {
+    return (currentSummary != null) ? currentSummary.id : null;
+  }
 
   public int currentMessageCount() {
     return messageContext.currentMessageCount();
@@ -103,7 +105,9 @@ public final class ClientConversation {
     }
   }
 
-  public void setCurrent(ConversationSummary conv) { currentSummary = conv; }
+  public void setCurrent(ConversationSummary conv) {
+    currentSummary = conv;
+  }
 
   public void showAllConversations() {
     updateAllConversations(false);
@@ -146,7 +150,7 @@ public final class ClientConversation {
   }
 
   public int conversationsCount() {
-   return summariesByUuid.size();
+    return summariesByUuid.size();
   }
 
   public Iterable<ConversationSummary> getConversationSummaries() {

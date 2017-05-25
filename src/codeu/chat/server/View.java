@@ -27,13 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import codeu.chat.common.BasicView;
-import codeu.chat.common.Conversation;
-import codeu.chat.common.ConversationSummary;
-import codeu.chat.common.LogicalView;
-import codeu.chat.common.Message;
-import codeu.chat.common.SinglesView;
-import codeu.chat.common.User;
+import codeu.chat.common.*;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Time;
 import codeu.chat.util.Uuid;
@@ -52,7 +46,7 @@ public final class View implements BasicView, LogicalView, SinglesView {
 
   @Override
   public Collection<User> getUsers(Collection<Uuid> ids) {
-    return intersect(model.userById(), ids);
+    return model.userById(intersect(ids, false), "ASC");
   }
 
   @Override
@@ -60,8 +54,8 @@ public final class View implements BasicView, LogicalView, SinglesView {
 
     final Collection<ConversationSummary> summaries = new ArrayList<>();
 
-    for (final Conversation conversation : model.conversationById().all()) {
-        summaries.add(conversation.summary);
+    for (final Conversation conversation : model.conversationById(null, "ASC")) {
+      summaries.add(conversation.summary);
     }
 
     return summaries;
@@ -70,12 +64,12 @@ public final class View implements BasicView, LogicalView, SinglesView {
 
   @Override
   public Collection<Conversation> getConversations(Collection<Uuid> ids) {
-    return intersect(model.conversationById(), ids);
+    return model.conversationById(intersect(ids, false), "ASC");
   }
 
   @Override
   public Collection<Message> getMessages(Collection<Uuid> ids) {
-    return intersect(model.messageById(), ids);
+    return model.messageByTime(intersect(ids, false), "ASC");
   }
 
   @Override
@@ -85,27 +79,15 @@ public final class View implements BasicView, LogicalView, SinglesView {
 
   @Override
   public Collection<User> getUsersExcluding(Collection<Uuid> ids) {
-
-    final Set<User> blacklist = new HashSet<>(intersect(model.userById(), ids));
-    final Set<User> users = new HashSet<>();
-
-    for (final User user : model.userById().all()) {
-      if (!blacklist.contains(user)) {
-        users.add(user);
-      }
-    }
-
-    return users;
+    return model.userById(intersect(ids, true), "ASC");
   }
 
   @Override
   public Collection<Conversation> getConversations(Time start, Time end) {
 
-    final Collection<Conversation> conversations = new ArrayList<>();
+    String range = "TimeCreated >= " + SQLFormatter.sqlCreationTime(start) + " AND TimeCreated <= " + SQLFormatter.sqlCreationTime(end);
 
-    for (final Conversation conversation : model.conversationByTime().range(start, end)) {
-      conversations.add(conversation);
-    }
+    final Collection<Conversation> conversations = model.conversationByTime(range, "ASC");
 
     return conversations;
 
@@ -114,13 +96,9 @@ public final class View implements BasicView, LogicalView, SinglesView {
   @Override
   public Collection<Conversation> getConversations(String filter) {
 
-    final Collection<Conversation> found = new ArrayList<>();
+    String name = "CNAME LIKE " + SQLFormatter.sqlContainsText(filter);
 
-    for (final Conversation conversation : model.conversationByText().all()) {
-      if (Pattern.matches(filter, conversation.title)) {
-        found.add(conversation);
-      }
-    }
+    final Collection<Conversation> found = model.conversationByText(filter, null);
 
     return found;
   }
@@ -128,22 +106,9 @@ public final class View implements BasicView, LogicalView, SinglesView {
   @Override
   public Collection<Message> getMessages(Uuid conversation, Time start, Time end) {
 
-    final Conversation foundConversation = model.conversationById().first(conversation);
+    String messagesConditions = "CONVERSATIONID = " + SQLFormatter.sqlID(conversation) + " AND TimeCreated >= " + SQLFormatter.sqlCreationTime(start) + " AND TimeCreated <= " + SQLFormatter.sqlCreationTime(end);
 
-    final List<Message> foundMessages = new ArrayList<>();
-
-    Message current = (foundConversation == null) ?
-        null :
-        model.messageById().first(foundConversation.firstMessage);
-
-    while (current != null && current.creation.compareTo(start) < 0) {
-      current = model.messageById().first(current.next);
-    }
-
-    while (current != null && current.creation.compareTo(end) <= 0) {
-      foundMessages.add(current);
-      current = model.messageById().first(current.next);
-    }
+    final Collection<Message> foundMessages = model.messageByTime(messagesConditions, "ASC");
 
     return foundMessages;
   }
@@ -160,22 +125,30 @@ public final class View implements BasicView, LogicalView, SinglesView {
 
     final LinkedList<Message> found = new LinkedList<>();
 
+    Uuid conversation = model.conversationID("ID = " + SQLFormatter.sqlID(rootMessage));
+
+    final Collection<Message> allMessages = model.messageByTime("CONVERSATIONID = " + SQLFormatter.sqlID(conversation), "ASC");
+
     // i <= remaining : must be "<=" and not just "<" or else "range = 0" would
     // return nothing and we want it to return just the root because the description
     // is that the function will return "range" around the root. Zero messages
     // around the root means that it should just return the root.
 
-    Message current = model.messageById().first(rootMessage);
+    Message current = null;
+    boolean foundRoot = false;
+    int countMessages = 0;
 
-    if (range > 0) {
-      for (int i = 0; i <= remaining && current != null; i++) {
-        found.addLast(current);
-        current = model.messageById().first(current.next);
+    for (Iterator<Message> iterator = allMessages.iterator(); iterator.hasNext() && countMessages <= remaining; ) {
+      current = iterator.next();
+      if (current.id.equals(rootMessage)) {
+        foundRoot = true;
       }
-    } else {
-      for (int i = 0; i <= remaining && current != null; i++) {
-        found.addFirst(current);
-        current = model.messageById().first(current.previous);
+      if (foundRoot) {
+        if (range > 0) {
+          found.addLast(current);
+        } else {
+          found.addFirst(current);
+        }
       }
     }
 
@@ -183,34 +156,47 @@ public final class View implements BasicView, LogicalView, SinglesView {
   }
 
   @Override
-  public User findUser(Uuid id) { return model.userById().first(id); }
+  public User findUser(Uuid id) {
+    return model.userById("ID = " + SQLFormatter.sqlID(id), null).iterator().next();
+  }
 
   @Override
-  public Conversation findConversation(Uuid id) { return model.conversationById().first(id); }
+  public Conversation findConversation(Uuid id) {
+    return model.conversationById("ID = " + SQLFormatter.sqlID(id), null).iterator().next();
+  }
 
   @Override
-  public Message findMessage(Uuid id) { return model.messageById().first(id); }
+  public Message findMessage(Uuid id) {
+    return model.messageById("ID = " + SQLFormatter.sqlID(id), null).iterator().next();
+  }
 
-  private static <T> Collection<T> intersect(StoreAccessor<Uuid, T> store, Collection<Uuid> ids) {
+  private static String intersect(Collection<Uuid> ids, boolean isBlacklist) {
 
     // Use a set to hold the found users as this will prevent duplicate ids from
     // yielding duplicates in the result.
 
-    final Collection<T> found = new HashSet<>();
+    String found = null;
+    String operator = null;
 
-    for (final Uuid id : ids) {
-
-      final T t = store.first(id);
-
-      if (t == null) {
-        LOG.warning("Unmapped id %s", id);
-      } else if (found.add(t)) {
-        // do nothing
-      } else {
-        LOG.warning("Duplicate id %s", id);
-      }
+    if (ids.isEmpty()) {
+      return found;
     }
 
+    found = "";
+
+    if (!isBlacklist) {
+      operator = "=";
+    } else {
+      operator = "<>";
+    }
+
+    for (Iterator<Uuid> id = ids.iterator(); id.hasNext(); ) {
+      Uuid nextID = id.next();
+      found += "ID " + operator + " " + SQLFormatter.sqlID(nextID);
+      if (id.hasNext()) {
+        found += " OR ";
+      }
+    }
     return found;
   }
 }

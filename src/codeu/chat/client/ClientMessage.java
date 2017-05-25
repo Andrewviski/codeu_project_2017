@@ -156,7 +156,7 @@ public final class ClientMessage {
       // Fetch/refetch all the messages.
       conversationContents.clear();
       LOG.info("Refetch all messages: replaceAll=%s firstMessage=%s", replaceAll,
-               conversationHead.firstMessage);
+          conversationHead.firstMessage);
       return conversationHead.firstMessage;
     } else {
       // Locate last known message. Its next, if any, becomes our starting point.

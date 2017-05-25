@@ -46,13 +46,19 @@ public final class Server implements Relay {
     }
 
     @Override
-    public Uuid id() { return id; }
+    public Uuid id() {
+      return id;
+    }
 
     @Override
-    public String text() { return text; }
+    public String text() {
+      return text;
+    }
 
     @Override
-    public Time time() { return time; }
+    public Time time() {
+      return time;
+    }
 
   }
 
@@ -82,22 +88,34 @@ public final class Server implements Relay {
     }
 
     @Override
-    public Uuid id() { return id; }
+    public Uuid id() {
+      return id;
+    }
 
     @Override
-    public Time time() { return time; }
+    public Time time() {
+      return time;
+    }
 
     @Override
-    public Uuid team() { return team; }
+    public Uuid team() {
+      return team;
+    }
 
     @Override
-    public Component user() { return user; }
+    public Component user() {
+      return user;
+    }
 
     @Override
-    public Component conversation() { return conversation; }
+    public Component conversation() {
+      return conversation;
+    }
 
     @Override
-    public Component message() { return message; }
+    public Component message() {
+      return message;
+    }
 
   }
 
@@ -124,7 +142,7 @@ public final class Server implements Relay {
   // As a side note, the ids start at 1 and not 0 to avoid the first id from
   // matching the NULL id which is defined as (null, 0);
 
- private final Uuid.Generator idGenerator = new LinearUuidGenerator(null, 1, Integer.MAX_VALUE);
+  private final Uuid.Generator idGenerator = new LinearUuidGenerator(null, 1, Integer.MAX_VALUE);
 
   // SERVER
   //
@@ -153,8 +171,8 @@ public final class Server implements Relay {
     }
 
     LOG.info(open ?
-             "Adding team was successful" :
-             "Adding team failed - team id already exists");
+        "Adding team was successful" :
+        "Adding team failed - team id already exists");
 
     return open;
   }
@@ -181,7 +199,7 @@ public final class Server implements Relay {
           message.id());
 
       if (history.size() >= maxHistory) {
-         history.remove();
+        history.remove();
       }
 
       return history.offer(new Bundle(
@@ -212,7 +230,7 @@ public final class Server implements Relay {
     if (authenticate(teamId, teamSecret)) {
 
       LOG.info(
-         "Request to read from server requested=%d allowed=%d",
+          "Request to read from server requested=%d allowed=%d",
           range,
           maxRead);
 
