@@ -35,11 +35,17 @@ public final class Model {
     @Override
     public int compare(Uuid a, Uuid b) {
 
-      if (a == b) { return 0; }
+      if (a == b) {
+        return 0;
+      }
 
-      if (a == null && b != null) { return -1; }
+      if (a == null && b != null) {
+        return -1;
+      }
 
-      if (a != null && b == null) { return 1; }
+      if (a != null && b == null) {
+        return 1;
+      }
 
       final int order = Integer.compare(a.id(), b.id());
       return order == 0 ? compare(a.root(), b.root()) : order;
@@ -81,19 +87,19 @@ public final class Model {
     try {
       user = new User(user.id, user.name, user.creation, user.password);
       dbConnection.dbUpdate("INSERT INTO USERS (ID,UNAME,TIMECREATED,PASSWORD) " +
-              "VALUES (" + SQLFormatter.sqlID(user.id) + ", " + SQLFormatter.sqlName(user.name) + ", " +
-              SQLFormatter.sqlCreationTime(user.creation) + ", " + SQLFormatter.sqlPassword(user.password) + ");");
+          "VALUES (" + SQLFormatter.sqlID(user.id) + ", " + SQLFormatter.sqlName(user.name) + ", " +
+          SQLFormatter.sqlCreationTime(user.creation) + ", " + SQLFormatter.sqlPassword(user.password) + ");");
       LOG.info(
-              "newUser success (user.id=%s user.name=%s user.time=%s)",
-              user.id,
-              user.name,
-              user.creation);
+          "newUser success (user.id=%s user.name=%s user.time=%s)",
+          user.id,
+          user.name,
+          user.creation);
     } catch (Exception e) {
       LOG.info(
-              "newUser fail - Database insertion error (user.id=%s user.name=%s user.time=%s)",
-              user.id,
-              user.name,
-              user.creation);
+          "newUser fail - Database insertion error (user.id=%s user.name=%s user.time=%s)",
+          user.id,
+          user.name,
+          user.creation);
       System.err.println(e.getClass().getName() + ": " + e.getMessage());
       System.exit(0);
     }
@@ -102,22 +108,22 @@ public final class Model {
   public void update(User user) {
     try {
       dbConnection.dbUpdate("UPDATE USERS set" +
-                                      " UNAME = " + SQLFormatter.sqlName(user.name) + ", " +
-                                      " TimeCreated = " + SQLFormatter.sqlCreationTime(user.creation) + ", " +
-                                      " UNAME = " + SQLFormatter.sqlName(user.password) +
-                                      " where ID = " + SQLFormatter.sqlID(user.id) +
-                                      ";");
+          " UNAME = " + SQLFormatter.sqlName(user.name) + ", " +
+          " TimeCreated = " + SQLFormatter.sqlCreationTime(user.creation) + ", " +
+          " UNAME = " + SQLFormatter.sqlName(user.password) +
+          " where ID = " + SQLFormatter.sqlID(user.id) +
+          ";");
       LOG.info(
-              "updateUser success (user.id=%s user.name=%s user.time=%s)",
-              user.id,
-              user.name,
-              user.creation);
+          "updateUser success (user.id=%s user.name=%s user.time=%s)",
+          user.id,
+          user.name,
+          user.creation);
     } catch (Exception e) {
       LOG.info(
-              "updateUser fail - Database update error (user.id=%s user.name=%s user.time=%s)",
-              user.id,
-              user.name,
-              user.creation);
+          "updateUser fail - Database update error (user.id=%s user.name=%s user.time=%s)",
+          user.id,
+          user.name,
+          user.creation);
       System.err.println(e.getClass().getName() + ": " + e.getMessage());
       System.exit(0);
     }
@@ -125,9 +131,9 @@ public final class Model {
 
   public Collection<User> userById(String where, String orderBy) {
     String query = "SELECT * FROM USERS";
-    if(where != null)
+    if (where != null)
       query += " where " + where;
-    if(orderBy != null)
+    if (orderBy != null)
       query += " ORDER BY ID " + orderBy;
     query += ";";
     return dbConnection.dbQueryUsers(query);
@@ -135,9 +141,9 @@ public final class Model {
 
   public Collection<User> userByTime(String where, String orderBy) {
     String query = "SELECT * FROM USERS";
-    if(where != null)
+    if (where != null)
       query += " where " + where;
-    if(orderBy != null)
+    if (orderBy != null)
       query += " ORDER BY TimeCreated " + orderBy;
     query += ";";
     return dbConnection.dbQueryUsers(query);
@@ -145,9 +151,9 @@ public final class Model {
 
   public Collection<User> userByText(String where, String orderBy) {
     String query = "SELECT * FROM USERS";
-    if(where != null)
+    if (where != null)
       query += " where " + where;
-    if(orderBy != null)
+    if (orderBy != null)
       query += " ORDER BY UNAME " + orderBy;
     query += ";";
     return dbConnection.dbQueryUsers(query);
@@ -161,13 +167,13 @@ public final class Model {
 
     try {
       dbConnection.dbUpdate("INSERT INTO CONVERSATIONS (ID,CNAME,OWNERID,TimeCreated) " +
-              "VALUES (" + SQLFormatter.sqlID(conversation.id) + ", " + SQLFormatter.sqlName(conversation.title) + ", " +
-              SQLFormatter.sqlID(conversation.owner) + ", " + SQLFormatter.sqlCreationTime(conversation.creation) + ");");
+          "VALUES (" + SQLFormatter.sqlID(conversation.id) + ", " + SQLFormatter.sqlName(conversation.title) + ", " +
+          SQLFormatter.sqlID(conversation.owner) + ", " + SQLFormatter.sqlCreationTime(conversation.creation) + ");");
 
       LOG.info("Conversation added: " + conversation.id);
     } catch (Exception e) {
       LOG.info(
-              "newConversation fail - Verify connection and try again shortly");
+          "newConversation fail - Verify connection and try again shortly");
       System.err.println(e.getClass().getName() + ": " + e.getMessage());
       System.exit(0);
     }
@@ -179,10 +185,10 @@ public final class Model {
   public void add(Uuid user, Uuid conversation) {
     try {
       dbConnection.dbUpdate("INSERT INTO USER_CONVERSATION (ID, USERID, CONVERSATIONID) " +
-                            "VALUES (" + SQLFormatter.sqlID(user, conversation) + ", " + SQLFormatter.sqlID(user) + ", " + SQLFormatter.sqlID(conversation) + ");");
+          "VALUES (" + SQLFormatter.sqlID(user, conversation) + ", " + SQLFormatter.sqlID(user) + ", " + SQLFormatter.sqlID(conversation) + ");");
     } catch (Exception e) {
       LOG.info(
-              "Adding user to conversation fail - Verify connection and try again shortly");
+          "Adding user to conversation fail - Verify connection and try again shortly");
       System.err.println(e.getClass().getName() + ": " + e.getMessage());
       System.exit(0);
     }
@@ -191,22 +197,22 @@ public final class Model {
   public void update(Conversation conversation) {
     try {
       dbConnection.dbUpdate("UPDATE CONVERSATIONS set" +
-              " CNAME = " + SQLFormatter.sqlName(conversation.title) + ", " +
-              " OWNERID = " + SQLFormatter.sqlID(conversation.owner) + ", " +
-              " TimeCreated = " + SQLFormatter.sqlCreationTime(conversation.creation) +
-              " where ID = " + SQLFormatter.sqlID(conversation.id) +
-              ";");
+          " CNAME = " + SQLFormatter.sqlName(conversation.title) + ", " +
+          " OWNERID = " + SQLFormatter.sqlID(conversation.owner) + ", " +
+          " TimeCreated = " + SQLFormatter.sqlCreationTime(conversation.creation) +
+          " where ID = " + SQLFormatter.sqlID(conversation.id) +
+          ";");
       LOG.info(
-              "updateConversation success (conversation.id=%s conversation.name=%s conversation.time=%s)",
-              conversation.id,
-              conversation.title,
-              conversation.creation);
+          "updateConversation success (conversation.id=%s conversation.name=%s conversation.time=%s)",
+          conversation.id,
+          conversation.title,
+          conversation.creation);
     } catch (Exception e) {
       LOG.info(
-              "updateConversation fail - Database update error (conversation.id=%s conversation.name=%s conversation.time=%s)",
-              conversation.id,
-              conversation.title,
-              conversation.creation);
+          "updateConversation fail - Database update error (conversation.id=%s conversation.name=%s conversation.time=%s)",
+          conversation.id,
+          conversation.title,
+          conversation.creation);
       System.err.println(e.getClass().getName() + ": " + e.getMessage());
       System.exit(0);
     }
@@ -217,18 +223,18 @@ public final class Model {
     Collection<Conversation> conversations = new HashSet<>();
 
     String query = "SELECT * FROM CONVERSATIONS";
-    if(where != null)
+    if (where != null)
       query += " where " + where;
-    if(orderBy != null)
+    if (orderBy != null)
       query += " ORDER BY ID " + orderBy;
     query += ";";
 
     Collection<Conversation> found = dbConnection.dbQueryConversations(query);
 
-    for(Conversation conv : found) {
+    for (Conversation conv : found) {
       conv.firstMessage = dbConnection.getConversationData("SELECT * FROM MESSAGES where CONVERSATIONID = " + SQLFormatter.sqlID(conv.id) + " AND MPREVID = " + SQLFormatter.sqlID(Uuid.NULL) + ";");
-      if(conv.firstMessage == null)
-          conv.firstMessage = Uuid.NULL;
+      if (conv.firstMessage == null)
+        conv.firstMessage = Uuid.NULL;
       conv.lastMessage = dbConnection.getConversationData("SELECT * FROM MESSAGES where CONVERSATIONID = " + SQLFormatter.sqlID(conv.id) + " AND MNEXTID = " + SQLFormatter.sqlID(Uuid.NULL) + ";");
       conv.users = dbConnection.getUsersInConversations("SELECT * FROM USER_CONVERSATION where CONVERSATIONID = " + SQLFormatter.sqlID(conv.id) + ";");
 
@@ -240,9 +246,9 @@ public final class Model {
 
   public Collection<Conversation> conversationByTime(String where, String orderBy) {
     String query = "SELECT * FROM CONVERSATIONS";
-    if(where != null)
+    if (where != null)
       query += " where " + where;
-    if(orderBy != null)
+    if (orderBy != null)
       query += " ORDER BY TimeCreated " + orderBy;
     query += ";";
     return dbConnection.dbQueryConversations(query);
@@ -250,9 +256,9 @@ public final class Model {
 
   public Collection<Conversation> conversationByText(String where, String orderBy) {
     String query = "SELECT * FROM CONVERSATIONS";
-    if(where != null)
+    if (where != null)
       query += " where " + where;
-    if(orderBy != null)
+    if (orderBy != null)
       query += " ORDER BY CNAME " + orderBy;
     query += ";";
     return dbConnection.dbQueryConversations(query);
@@ -261,18 +267,18 @@ public final class Model {
   public void add(Message message, Uuid conversation) {
     try {
       dbConnection.dbUpdate("INSERT INTO MESSAGES (ID,USERID,MNEXTID,MPREVID,CONVERSATIONID,TimeCreated,MESSAGE) " +
-              "VALUES (" +  SQLFormatter.sqlID(message.id) + ", " +
-                            SQLFormatter.sqlID(message.author) + ", " +
-                            SQLFormatter.sqlID(message.next) + ", " +
-                            SQLFormatter.sqlID(message.previous) + ", " +
-                            SQLFormatter.sqlID(conversation) + ", " +
-                            SQLFormatter.sqlCreationTime(message.creation) + ", " +
-                            SQLFormatter.sqlBody(message.content) + ");");
+          "VALUES (" + SQLFormatter.sqlID(message.id) + ", " +
+          SQLFormatter.sqlID(message.author) + ", " +
+          SQLFormatter.sqlID(message.next) + ", " +
+          SQLFormatter.sqlID(message.previous) + ", " +
+          SQLFormatter.sqlID(conversation) + ", " +
+          SQLFormatter.sqlCreationTime(message.creation) + ", " +
+          SQLFormatter.sqlBody(message.content) + ");");
 
       LOG.info("Message added: " + message.id);
     } catch (Exception e) {
       LOG.info(
-              "newMessage fail - Verify connection and try again shortly");
+          "newMessage fail - Verify connection and try again shortly");
       System.err.println(e.getClass().getName() + ": " + e.getMessage());
       System.exit(0);
     }
@@ -281,22 +287,22 @@ public final class Model {
   public void update(Message message) {
     try {
       dbConnection.dbUpdate("UPDATE MESSAGES SET" +
-              " USERID = " + SQLFormatter.sqlID(message.author) + "," +
-              " MNEXTID = " + SQLFormatter.sqlID(message.next) + "," +
-              " MPREVID = " + SQLFormatter.sqlID(message.previous) + "," +
-              " TimeCreated = " + SQLFormatter.sqlCreationTime(message.creation) + "," +
-              " MESSAGE = " + SQLFormatter.sqlBody(message.content) +
-              " where ID = " + SQLFormatter.sqlID(message.id) +
-              ";");
+          " USERID = " + SQLFormatter.sqlID(message.author) + "," +
+          " MNEXTID = " + SQLFormatter.sqlID(message.next) + "," +
+          " MPREVID = " + SQLFormatter.sqlID(message.previous) + "," +
+          " TimeCreated = " + SQLFormatter.sqlCreationTime(message.creation) + "," +
+          " MESSAGE = " + SQLFormatter.sqlBody(message.content) +
+          " where ID = " + SQLFormatter.sqlID(message.id) +
+          ";");
       LOG.info(
-              "updateMessage success (message.id=%s message.time=%s)",
-              message.id,
-              message.creation);
+          "updateMessage success (message.id=%s message.time=%s)",
+          message.id,
+          message.creation);
     } catch (Exception e) {
       LOG.info(
-              "updateMessage fail - Database update error (message.id=%s message.time=%s)",
-              message.id,
-              message.creation);
+          "updateMessage fail - Database update error (message.id=%s message.time=%s)",
+          message.id,
+          message.creation);
       System.err.println(e.getClass().getName() + ": " + e.getMessage());
       System.exit(0);
     }
@@ -304,9 +310,9 @@ public final class Model {
 
   public Collection<Message> messageById(String where, String orderBy) {
     String query = "SELECT * FROM MESSAGES";
-    if(where != null)
+    if (where != null)
       query += " where " + where;
-    if(orderBy != null)
+    if (orderBy != null)
       query += " ORDER BY ID " + orderBy;
     query += ";";
     return dbConnection.dbQueryMessages(query);
@@ -314,9 +320,9 @@ public final class Model {
 
   public Collection<Message> messageByTime(String where, String orderBy) {
     String query = "SELECT * FROM MESSAGES";
-    if(where != null)
+    if (where != null)
       query += " where " + where;
-    if(orderBy != null)
+    if (orderBy != null)
       query += " ORDER BY TimeCreated " + orderBy;
     query += ";";
     return dbConnection.dbQueryMessages(query);
@@ -324,9 +330,9 @@ public final class Model {
 
   public Collection<Message> messageByText(String where, String orderBy) {
     String query = "SELECT * FROM MESSAGES";
-    if(where != null)
+    if (where != null)
       query += " where " + where;
-    if(orderBy != null)
+    if (orderBy != null)
       query += " ORDER BY MESSAGE " + orderBy;
     query += ";";
     return dbConnection.dbQueryMessages(query);
@@ -334,7 +340,7 @@ public final class Model {
 
   public Uuid conversationID(String where) {
     String query = "SELECT CONVERSATIONID FROM MESSAGES";
-    if(where != null)
+    if (where != null)
       query += " where " + where;
     query += ";";
     return dbConnection.getConversationID(query);

@@ -187,6 +187,7 @@ public final class Uuid {
   }
 
   private static Uuid parse(final Uuid root, String[] tokens, int index) throws IOException {
+
     final long id = Long.parseLong(tokens[index]);
 
     if ((id >> 32) != 0) {
