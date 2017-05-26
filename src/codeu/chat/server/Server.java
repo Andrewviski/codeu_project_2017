@@ -256,13 +256,13 @@ public final class Server {
 
     String password = "Temporal Password for Relay";
 
-    User user = model.userById("ID = " + SQLFormatter.sqlID(relayUser.id()), null).iterator().next();
+    User user = model.getSingleUser(relayUser.id());
 
     if (user == null) {
       user = controller.newUser(relayUser.id(), relayUser.text(), relayUser.time(), password);
     }
 
-    Conversation conversation = model.conversationById("ID = " + SQLFormatter.sqlID(relayConversation.id()), null).iterator().next();
+    Conversation conversation = model.getSingleConversation(relayConversation.id());
 
     if (conversation == null) {
 
@@ -275,7 +275,7 @@ public final class Server {
           relayConversation.time());
     }
 
-    Message message = model.messageById("ID = " + relayMessage.id().toString(), null).iterator().next();
+    Message message = model.getSingleMessage(relayMessage.id());
 
     if (message == null) {
       message = controller.newMessage(relayMessage.id(),

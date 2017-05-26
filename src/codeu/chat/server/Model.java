@@ -17,6 +17,7 @@ package codeu.chat.server;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Iterator;
 
 import codeu.chat.codeU_db.DataBaseConnection;
 import codeu.chat.common.*;
@@ -24,9 +25,6 @@ import codeu.chat.util.Logger;
 import codeu.chat.util.Time;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.store.Store;
-import codeu.chat.util.store.StoreAccessor;
-
-import javax.lang.model.util.SimpleElementVisitor6;
 
 public final class Model {
 
@@ -80,12 +78,125 @@ public final class Model {
 
   private static DataBaseConnection dbConnection = new DataBaseConnection();
 
+  public static String intersect(Collection<Uuid> ids, boolean isBlacklist) {
+
+    // Use a set to hold the found users as this will prevent duplicate ids from
+    // yielding duplicates in the result.
+
+    String found = null;
+    String operator = null;
+
+    if (ids.isEmpty()) {
+      return found;
+    }
+
+    found = "";
+
+    if (!isBlacklist) {
+      operator = "=";
+    } else {
+      operator = "<>";
+    }
+
+    for (Iterator<Uuid> id = ids.iterator(); id.hasNext(); ) {
+      Uuid nextID = id.next();
+      found += "ID " + operator + " " + SQLFormatter.sqlID(nextID);
+      if (id.hasNext()) {
+        found += " OR ";
+      }
+    }
+    return found;
+  }
+
+  public User getAdmin() {
+    Collection<User> returnUser = userById("UNAME = 'Admin'", true);
+    if(!returnUser.isEmpty()){
+      return returnUser.iterator().next();
+    }
+    else {
+      return null;
+    }
+  }
+
+  public User getSingleUser(Uuid userID) {
+    Collection<User> returnUser = userById("ID = " + SQLFormatter.sqlID(userID), true);
+    if(!returnUser.isEmpty()){
+      return returnUser.iterator().next();
+    }
+    else {
+      return null;
+    }
+  }
+
+
+
+  public Collection<User> getAllUsers(Uuid conversation, boolean orderASC) {
+    if(!conversation.equals(Uuid.NULL)) {
+      Collection<Uuid> usersIDs = dbConnection.getUsersInConversations("SELECT * FROM USER_CONVERSATION where CONVERSATIONID = " + SQLFormatter.sqlID(conversation) + ";");
+      return userById(intersect(usersIDs, false), true);
+    }
+    else {
+      return userById(null, true);
+    }
+  }
+
+  public Conversation getSingleConversation(Uuid conversationID) {
+    Collection<Conversation> returnConversation = conversationById("ID = " + SQLFormatter.sqlID(conversationID), true);
+    if(!returnConversation.isEmpty()){
+      return returnConversation.iterator().next();
+    }
+    else {
+      return null;
+    }
+  }
+
+  public Collection<Conversation> getAllConversations(Uuid user, boolean orderASC) {
+    if(!user.equals(Uuid.NULL)) {
+      Collection<Uuid> conversationsIDs = dbConnection.getUsersInConversations("SELECT * FROM USER_CONVERSATION where USERID = " + SQLFormatter.sqlID(user) + ";");
+      return conversationById(intersect(conversationsIDs, false), orderASC);
+    }
+    else {
+      return conversationById(null, orderASC);
+    }
+  }
+
+  public Collection<Conversation> getConversationsInRange(Time start, Time end, boolean orderASC) {
+    return conversationByTime("TimeCreated >= " + SQLFormatter.sqlCreationTime(start) + " AND TimeCreated <= " + SQLFormatter.sqlCreationTime(end), orderASC);
+  }
+
+  public Collection<Conversation> getConversationsByFilter(String filter, boolean orderASC) {
+    return conversationByText("CNAME LIKE " + SQLFormatter.sqlContainsText(filter), orderASC);
+  }
+
+  public Message getSingleMessage(Uuid messageID) {
+    Collection<Message> returnMessage = messageById("ID = " + SQLFormatter.sqlID(messageID), true);
+    if(!returnMessage.isEmpty()){
+      return returnMessage.iterator().next();
+    }
+    else {
+      return null;
+    }
+  }
+
+  public Message getLastMessage(Uuid conversationID) {
+    Collection<Message> lastMessage = messageById("MNEXTID == '0' AND CONVERSATIONID = " + SQLFormatter.sqlID(conversationID), false);
+    if(!lastMessage.isEmpty()){
+      return lastMessage.iterator().next();
+    }
+    else {
+      return null;
+    }
+  }
+
+  public Collection<Message> getMessagesInRange(Uuid conversation, Time start, Time end, boolean orderASC) {
+    return messageByTime("CONVERSATIONID = " + SQLFormatter.sqlID(conversation) + " AND TimeCreated >= " + SQLFormatter.sqlCreationTime(start) + " AND TimeCreated <= " + SQLFormatter.sqlCreationTime(end), orderASC);
+  }
+
   public void add(User user) {
 
     currentUserGeneration = userGenerations.make();
 
     try {
-      user = new User(user.id, user.name, user.creation, user.password);
       dbConnection.dbUpdate("INSERT INTO USERS (ID,UNAME,TIMECREATED,PASSWORD) " +
           "VALUES (" + SQLFormatter.sqlID(user.id) + ", " + SQLFormatter.sqlName(user.name) + ", " +
           SQLFormatter.sqlCreationTime(user.creation) + ", " + SQLFormatter.sqlPassword(user.password) + ");");
@@ -103,6 +214,14 @@ public final class Model {
       System.err.println(e.getClass().getName() + ": " + e.getMessage());
       System.exit(0);
     }
+  }
+
+  public Collection<Message> getAllMessagesInConversation(Uuid conversation, boolean orderASC) {
+    return messageByTime("CONVERSATIONID = " + SQLFormatter.sqlID(conversation), orderASC);
+  }
+
+  public Collection<Message> getAllMessagesFromUser(Uuid user, boolean orderASC) {
+    return messageByTime("USERID = " + SQLFormatter.sqlID(user), orderASC);
   }
 
   public void update(User user) {
@@ -129,32 +248,38 @@ public final class Model {
     }
   }
 
-  public Collection<User> userById(String where, String orderBy) {
+  public Collection<User> userById(String where, boolean orderASC) {
     String query = "SELECT * FROM USERS";
     if (where != null)
       query += " where " + where;
-    if (orderBy != null)
-      query += " ORDER BY ID " + orderBy;
+    if (orderASC)
+      query += " ORDER BY ID ASC";
+    else
+      query += " ORDER BY ID DESC";
     query += ";";
     return dbConnection.dbQueryUsers(query);
   }
 
-  public Collection<User> userByTime(String where, String orderBy) {
+  public Collection<User> userByTime(String where, boolean orderASC) {
     String query = "SELECT * FROM USERS";
     if (where != null)
       query += " where " + where;
-    if (orderBy != null)
-      query += " ORDER BY TimeCreated " + orderBy;
+    if (orderASC)
+      query += " ORDER BY TimeCreated ASC";
+    else
+      query += " ORDER BY TimeCreated DESC";
     query += ";";
     return dbConnection.dbQueryUsers(query);
   }
 
-  public Collection<User> userByText(String where, String orderBy) {
+  public Collection<User> userByText(String where, boolean orderASC) {
     String query = "SELECT * FROM USERS";
     if (where != null)
       query += " where " + where;
-    if (orderBy != null)
-      query += " ORDER BY UNAME " + orderBy;
+    if (orderASC)
+      query += " ORDER BY UNAME ASC";
+    else
+      query += " ORDER BY UNAME DESC";
     query += ";";
     return dbConnection.dbQueryUsers(query);
   }
@@ -218,15 +343,17 @@ public final class Model {
     }
   }
 
-  public Collection<Conversation> conversationById(String where, String orderBy) {
+  public Collection<Conversation> conversationById(String where, boolean orderASC) {
 
     Collection<Conversation> conversations = new HashSet<>();
 
     String query = "SELECT * FROM CONVERSATIONS";
     if (where != null)
       query += " where " + where;
-    if (orderBy != null)
-      query += " ORDER BY ID " + orderBy;
+    if (orderASC)
+      query += " ORDER BY ID ASC";
+    else
+      query += " ORDER BY ID DESC";
     query += ";";
 
     Collection<Conversation> found = dbConnection.dbQueryConversations(query);
@@ -244,22 +371,26 @@ public final class Model {
     return conversations;
   }
 
-  public Collection<Conversation> conversationByTime(String where, String orderBy) {
+  public Collection<Conversation> conversationByTime(String where, boolean orderASC) {
     String query = "SELECT * FROM CONVERSATIONS";
     if (where != null)
       query += " where " + where;
-    if (orderBy != null)
-      query += " ORDER BY TimeCreated " + orderBy;
+    if (orderASC)
+      query += " ORDER BY TimeCreated ASC";
+    else
+      query += " ORDER BY TimeCreated DESC";
     query += ";";
     return dbConnection.dbQueryConversations(query);
   }
 
-  public Collection<Conversation> conversationByText(String where, String orderBy) {
+  public Collection<Conversation> conversationByText(String where, boolean orderASC) {
     String query = "SELECT * FROM CONVERSATIONS";
     if (where != null)
       query += " where " + where;
-    if (orderBy != null)
-      query += " ORDER BY CNAME " + orderBy;
+    if (orderASC)
+      query += " ORDER BY CNAME ASC";
+    else
+      query += " ORDER BY CNAME DESC";
     query += ";";
     return dbConnection.dbQueryConversations(query);
   }
@@ -308,41 +439,44 @@ public final class Model {
     }
   }
 
-  public Collection<Message> messageById(String where, String orderBy) {
+  public Collection<Message> messageById(String where, boolean orderASC) {
     String query = "SELECT * FROM MESSAGES";
     if (where != null)
       query += " where " + where;
-    if (orderBy != null)
-      query += " ORDER BY ID " + orderBy;
+    if (orderASC)
+      query += " ORDER BY ID ASC";
+    else
+      query += " ORDER BY ID DESC";
     query += ";";
     return dbConnection.dbQueryMessages(query);
   }
 
-  public Collection<Message> messageByTime(String where, String orderBy) {
+  public Collection<Message> messageByTime(String where, boolean orderASC) {
     String query = "SELECT * FROM MESSAGES";
     if (where != null)
       query += " where " + where;
-    if (orderBy != null)
-      query += " ORDER BY TimeCreated " + orderBy;
+    if (orderASC)
+      query += " ORDER BY TimeCreated ASC";
+    else
+      query += " ORDER BY TimeCreated DESC";
     query += ";";
     return dbConnection.dbQueryMessages(query);
   }
 
-  public Collection<Message> messageByText(String where, String orderBy) {
+  public Collection<Message> messageByText(String where, boolean orderASC) {
     String query = "SELECT * FROM MESSAGES";
     if (where != null)
       query += " where " + where;
-    if (orderBy != null)
-      query += " ORDER BY MESSAGE " + orderBy;
+    if (orderASC)
+      query += " ORDER BY MESSAGE ASC";
+    else
+      query += " ORDER BY MESSAGE DESC";
     query += ";";
     return dbConnection.dbQueryMessages(query);
   }
 
-  public Uuid conversationID(String where) {
-    String query = "SELECT CONVERSATIONID FROM MESSAGES";
-    if (where != null)
-      query += " where " + where;
-    query += ";";
+  public Uuid conversationID(Uuid message) {
+    String query = "SELECT CONVERSATIONID FROM MESSAGES WHERE ID = " + SQLFormatter.sqlID(message) + ";";
     return dbConnection.getConversationID(query);
   }
 }

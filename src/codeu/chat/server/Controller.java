@@ -45,7 +45,7 @@ public final class Controller implements RawController, BasicController {
   public Controller(Uuid serverId, Model model) {
     this.model = model;
     this.uuidGenerator = new RandomUuidGenerator(serverId, System.currentTimeMillis());
-    if (this.model.userByText("UNAME = 'Admin'", null).isEmpty())
+    if (this.model.getAdmin() == null)
       this.model.add(new User(createId(), "Admin", Time.now(), "admin"));
   }
 
@@ -67,13 +67,11 @@ public final class Controller implements RawController, BasicController {
   @Override
   public Message newMessage(Uuid id, Uuid author, Uuid conversation, String body, Time creationTime) {
 
-    Collection<Message> prevMessages = model.messageByTime("MNEXTID == '0' AND CONVERSATIONID = " + SQLFormatter.sqlID(conversation), "DESC");
+    Message prevMessage = model.getLastMessage(conversation);
 
     Message message = null;
-    Message prevMessage = null;
 
-    if (!prevMessages.isEmpty()) {
-      prevMessage = prevMessages.iterator().next();
+    if (prevMessage != null) {
       prevMessage.next = id;
       model.update(prevMessage);
       message = new Message(id, Uuid.NULL, prevMessage.id, creationTime, author, body);
@@ -145,10 +143,9 @@ public final class Controller implements RawController, BasicController {
   }
 
   private boolean isIdInUse(Uuid id) {
-    String findID = "ID = " + SQLFormatter.sqlID(id);
-    return !model.messageById(findID, null).isEmpty() ||
-        !model.conversationById(findID, null).isEmpty() ||
-        !model.userById(findID, null).isEmpty();
+    return model.getSingleUser(id) != null ||
+        model.getSingleConversation(id) != null ||
+        model.getSingleMessage(id) != null;
   }
 
   private boolean isIdFree(Uuid id) {
