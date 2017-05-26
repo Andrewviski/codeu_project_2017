@@ -20,7 +20,6 @@ public class SQLFormatter {
       sqlID = userID.toString();
       sqlID = sqlID.replace("[UUID:", "");
       sqlID = sqlID.replace("]", "");
-      sqlID = "'" + sqlID + "'";
     }
 
     return sqlID;
@@ -41,34 +40,33 @@ public class SQLFormatter {
       sqlID2 = sqlID2.replace("]", "");
     }
 
-    String sqlID = "'" + sqlID1 + sqlID2 + "'";
+    String sqlID = sqlID1 + sqlID2;
     return sqlID;
   }
 
   public static String sqlName(String userName) {
-    String sqlName = "'" + userName + "'";
+    String sqlName = userName;
     return sqlName;
   }
 
   public static String sqlCreationTime(Time userTime) {
     Long inMs = userTime.inMs();
     String sqlCreationTime = Long.toString(inMs);
-    sqlCreationTime = "'" + sqlCreationTime + "'";
     return sqlCreationTime;
   }
 
   public static String sqlPassword(String userPassword) {
-    String sqlPassword = "'" + userPassword + "'";
+    String sqlPassword = userPassword;
     return sqlPassword;
   }
 
   public static String sqlBody(String userBody) {
-    String sqlBody = "'" + userBody + "'";
+    String sqlBody = userBody;
     return sqlBody;
   }
 
   public static String sqlContainsText(String text) {
-    String sqlConstainsText = "'%" + text + "%'";
+    String sqlConstainsText = text;
     return sqlConstainsText;
   }
 

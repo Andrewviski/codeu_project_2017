@@ -14,10 +14,8 @@
 
 package codeu.chat.server;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Iterator;
+import java.io.StringReader;
+import java.util.*;
 
 import codeu.chat.codeU_db.DataBaseConnection;
 import codeu.chat.common.*;
@@ -78,7 +76,7 @@ public final class Model {
 
   private static DataBaseConnection dbConnection = new DataBaseConnection();
 
-  public static String intersect(Collection<Uuid> ids, boolean isBlacklist) {
+  public static String intersect(Vector<String> parameters, Collection<Uuid> ids, boolean isBlacklist) {
 
     // Use a set to hold the found users as this will prevent duplicate ids from
     // yielding duplicates in the result.
@@ -100,7 +98,8 @@ public final class Model {
 
     for (Iterator<Uuid> id = ids.iterator(); id.hasNext(); ) {
       Uuid nextID = id.next();
-      found += "ID " + operator + " " + SQLFormatter.sqlID(nextID);
+      parameters.add(SQLFormatter.sqlID(nextID));
+      found += "ID " + operator + " ?";
       if (id.hasNext()) {
         found += " OR ";
       }
@@ -109,7 +108,13 @@ public final class Model {
   }
 
   public User getAdmin() {
-    Collection<User> returnUser = userById("UNAME = 'Admin'", true);
+    String query;
+    Vector<String> parameters = new Vector<>();
+
+    parameters.add("Admin");
+    query = "UNAME = ?";
+
+    Collection<User> returnUser = userById(parameters, query, true);
     if(!returnUser.isEmpty()){
       return returnUser.iterator().next();
     }
@@ -119,7 +124,13 @@ public final class Model {
   }
 
   public User getSingleUser(Uuid userID) {
-    Collection<User> returnUser = userById("ID = " + SQLFormatter.sqlID(userID), true);
+    String query;
+    Vector<String> parameters = new Vector<>();
+
+    parameters.add(SQLFormatter.sqlID(userID));
+    query = "ID = ?";
+
+    Collection<User> returnUser = userById(parameters, query, true);
     if(!returnUser.isEmpty()){
       return returnUser.iterator().next();
     }
@@ -128,20 +139,42 @@ public final class Model {
     }
   }
 
+  public Collection<User> userById(Collection<Uuid> ids, boolean isBlackList, boolean orderASC) {
+    String query;
+    Vector<String> parameters = new Vector<>();
 
+    query = intersect(parameters, ids, isBlackList);
+
+    return userById(parameters, query, orderASC);
+  }
 
   public Collection<User> getAllUsers(Uuid conversation, boolean orderASC) {
+    String query;
+    Vector<String> parameters = new Vector<>();
+
     if(!conversation.equals(Uuid.NULL)) {
-      Collection<Uuid> usersIDs = dbConnection.getUsersInConversations("SELECT * FROM USER_CONVERSATION where CONVERSATIONID = " + SQLFormatter.sqlID(conversation) + ";");
-      return userById(intersect(usersIDs, false), true);
+      parameters.add(SQLFormatter.sqlID(conversation));
+      Collection<Uuid> usersIDs = dbConnection.getUsersInConversations(parameters, "SELECT * FROM USER_CONVERSATION where CONVERSATIONID = ?;");
+
+      parameters.clear();
+      query = intersect(parameters, usersIDs, false);
+
+      return userById(parameters, query, orderASC);
     }
     else {
-      return userById(null, true);
+      return userById(parameters, null, true);
     }
   }
 
   public Conversation getSingleConversation(Uuid conversationID) {
-    Collection<Conversation> returnConversation = conversationById("ID = " + SQLFormatter.sqlID(conversationID), true);
+    String query;
+    Vector<String> parameters = new Vector<>();
+
+    parameters.add(SQLFormatter.sqlID(conversationID));
+    query = "ID = ?";
+
+    Collection<Conversation> returnConversation = conversationById(parameters, query, true);
+
     if(!returnConversation.isEmpty()){
       return returnConversation.iterator().next();
     }
@@ -150,26 +183,66 @@ public final class Model {
     }
   }
 
+  public Collection<Conversation> conversationById(Collection<Uuid> ids, boolean isBlackList, boolean orderASC) {
+    String query;
+    Vector<String> parameters = new Vector<>();
+
+    query = intersect(parameters, ids, isBlackList);
+
+    return conversationById(parameters, query, orderASC);
+  }
+
   public Collection<Conversation> getAllConversations(Uuid user, boolean orderASC) {
+    String query;
+    Vector<String> parameters = new Vector<>();
+
+
+
     if(!user.equals(Uuid.NULL)) {
-      Collection<Uuid> conversationsIDs = dbConnection.getUsersInConversations("SELECT * FROM USER_CONVERSATION where USERID = " + SQLFormatter.sqlID(user) + ";");
-      return conversationById(intersect(conversationsIDs, false), orderASC);
+      parameters.add(SQLFormatter.sqlID(user));
+      query = "SELECT * FROM USER_CONVERSATION where USERID = ?;";
+
+      Collection<Uuid> conversationsIDs = dbConnection.getUsersInConversations(parameters, query);
+
+      parameters.clear();
+      query = intersect(parameters, conversationsIDs, false);
+
+      return conversationById(parameters, query, orderASC);
     }
     else {
-      return conversationById(null, orderASC);
+      return conversationById(parameters, null, orderASC);
     }
   }
 
   public Collection<Conversation> getConversationsInRange(Time start, Time end, boolean orderASC) {
-    return conversationByTime("TimeCreated >= " + SQLFormatter.sqlCreationTime(start) + " AND TimeCreated <= " + SQLFormatter.sqlCreationTime(end), orderASC);
+    String query;
+    Vector<String> parameters = new Vector<>();
+
+    parameters.add(SQLFormatter.sqlCreationTime(start));
+    parameters.add(SQLFormatter.sqlCreationTime(end));
+    query = "TimeCreated >= ? AND TimeCreated <= ?";
+
+    return conversationByTime(parameters, query, orderASC);
   }
 
   public Collection<Conversation> getConversationsByFilter(String filter, boolean orderASC) {
-    return conversationByText("CNAME LIKE " + SQLFormatter.sqlContainsText(filter), orderASC);
+    String query;
+    Vector<String> parameters = new Vector<>();
+
+    parameters.add(SQLFormatter.sqlContainsText(filter));
+    query = "CNAME LIKE '%?%'";
+
+    return conversationByText(parameters, query, orderASC);
   }
 
   public Message getSingleMessage(Uuid messageID) {
-    Collection<Message> returnMessage = messageById("ID = " + SQLFormatter.sqlID(messageID), true);
+    String query;
+    Vector<String> parameters = new Vector<>();
+
+    parameters.add(SQLFormatter.sqlID(messageID));
+    query = "ID = ?";
+
+    Collection<Message> returnMessage = messageById(parameters, query, true);
     if(!returnMessage.isEmpty()){
       return returnMessage.iterator().next();
     }
@@ -178,8 +251,23 @@ public final class Model {
     }
   }
 
+  public Collection<Message> messageByTime(Collection<Uuid> ids, boolean isBlackList, boolean orderASC) {
+    String query;
+    Vector<String> parameters = new Vector<>();
+
+    query = intersect(parameters, ids, isBlackList);
+
+    return messageByTime(parameters, query, orderASC);
+  }
+
   public Message getLastMessage(Uuid conversationID) {
-    Collection<Message> lastMessage = messageById("MNEXTID == '0' AND CONVERSATIONID = " + SQLFormatter.sqlID(conversationID), false);
+    String query;
+    Vector<String> parameters = new Vector<>();
+
+    parameters.add(SQLFormatter.sqlID(conversationID));
+    query = "MNEXTID == '0' AND CONVERSATIONID = ?";
+
+    Collection<Message> lastMessage = messageById(parameters, query, false);
     if(!lastMessage.isEmpty()){
       return lastMessage.iterator().next();
     }
@@ -189,17 +277,32 @@ public final class Model {
   }
 
   public Collection<Message> getMessagesInRange(Uuid conversation, Time start, Time end, boolean orderASC) {
-    return messageByTime("CONVERSATIONID = " + SQLFormatter.sqlID(conversation) + " AND TimeCreated >= " + SQLFormatter.sqlCreationTime(start) + " AND TimeCreated <= " + SQLFormatter.sqlCreationTime(end), orderASC);
+    String query;
+    Vector<String> parameters = new Vector<>();
+
+    parameters.add(SQLFormatter.sqlID(conversation));
+    parameters.add(SQLFormatter.sqlCreationTime(start));
+    parameters.add(SQLFormatter.sqlCreationTime(end));
+    query = "CONVERSATIONID = ? AND TimeCreated >= ? AND TimeCreated <= ?";
+
+    return messageByTime(parameters, query, orderASC);
   }
 
   public void add(User user) {
+    String query;
+    Vector<String> parameters = new Vector<>();
 
     currentUserGeneration = userGenerations.make();
 
     try {
-      dbConnection.dbUpdate("INSERT INTO USERS (ID,UNAME,TIMECREATED,PASSWORD) " +
-          "VALUES (" + SQLFormatter.sqlID(user.id) + ", " + SQLFormatter.sqlName(user.name) + ", " +
-          SQLFormatter.sqlCreationTime(user.creation) + ", " + SQLFormatter.sqlPassword(user.password) + ");");
+      parameters.add(SQLFormatter.sqlID(user.id));
+      parameters.add(SQLFormatter.sqlName(user.name));
+      parameters.add(SQLFormatter.sqlCreationTime(user.creation));
+      parameters.add(SQLFormatter.sqlPassword(user.password));
+      query = "INSERT INTO USERS (ID,UNAME,TIMECREATED,PASSWORD) " +
+          "VALUES ( ?, ?, ?, ?);";
+
+      dbConnection.dbUpdate(parameters, query);
       LOG.info(
           "newUser success (user.id=%s user.name=%s user.time=%s)",
           user.id,
@@ -217,21 +320,42 @@ public final class Model {
   }
 
   public Collection<Message> getAllMessagesInConversation(Uuid conversation, boolean orderASC) {
-    return messageByTime("CONVERSATIONID = " + SQLFormatter.sqlID(conversation), orderASC);
+    String query;
+    Vector<String> parameters = new Vector<>();
+
+    parameters.add(SQLFormatter.sqlID(conversation));
+    query = "CONVERSATIONID = ?;";
+
+    return messageByTime(parameters, query, orderASC);
   }
 
   public Collection<Message> getAllMessagesFromUser(Uuid user, boolean orderASC) {
-    return messageByTime("USERID = " + SQLFormatter.sqlID(user), orderASC);
+    String query;
+    Vector<String> parameters = new Vector<>();
+
+    parameters.add(SQLFormatter.sqlID(user));
+    query = "USERID = ?;";
+
+    return messageByTime(parameters, query, orderASC);
   }
 
   public void update(User user) {
+    String query;
+    Vector<String> parameters = new Vector<>();
+
     try {
-      dbConnection.dbUpdate("UPDATE USERS set" +
-          " UNAME = " + SQLFormatter.sqlName(user.name) + ", " +
-          " TimeCreated = " + SQLFormatter.sqlCreationTime(user.creation) + ", " +
-          " UNAME = " + SQLFormatter.sqlName(user.password) +
-          " where ID = " + SQLFormatter.sqlID(user.id) +
-          ";");
+      parameters.add(SQLFormatter.sqlName(user.name));
+      parameters.add(SQLFormatter.sqlCreationTime(user.creation));
+      parameters.add(SQLFormatter.sqlName(user.password));
+      parameters.add(SQLFormatter.sqlID(user.id));
+      query = "UPDATE USERS set" +
+          " UNAME = ?," +
+          " TimeCreated = ?," +
+          " UNAME = ?" +
+          " where ID = ?" +
+          ";";
+
+      dbConnection.dbUpdate(parameters, query);
       LOG.info(
           "updateUser success (user.id=%s user.name=%s user.time=%s)",
           user.id,
@@ -248,7 +372,7 @@ public final class Model {
     }
   }
 
-  public Collection<User> userById(String where, boolean orderASC) {
+  public Collection<User> userById(Vector<String> parameters, String where, boolean orderASC) {
     String query = "SELECT * FROM USERS";
     if (where != null)
       query += " where " + where;
@@ -257,10 +381,10 @@ public final class Model {
     else
       query += " ORDER BY ID DESC";
     query += ";";
-    return dbConnection.dbQueryUsers(query);
+    return dbConnection.dbQueryUsers(parameters, query);
   }
 
-  public Collection<User> userByTime(String where, boolean orderASC) {
+  public Collection<User> userByTime(Vector<String> parameters, String where, boolean orderASC) {
     String query = "SELECT * FROM USERS";
     if (where != null)
       query += " where " + where;
@@ -269,10 +393,10 @@ public final class Model {
     else
       query += " ORDER BY TimeCreated DESC";
     query += ";";
-    return dbConnection.dbQueryUsers(query);
+    return dbConnection.dbQueryUsers(parameters, query);
   }
 
-  public Collection<User> userByText(String where, boolean orderASC) {
+  public Collection<User> userByText(Vector<String> parameters, String where, boolean orderASC) {
     String query = "SELECT * FROM USERS";
     if (where != null)
       query += " where " + where;
@@ -281,7 +405,7 @@ public final class Model {
     else
       query += " ORDER BY UNAME DESC";
     query += ";";
-    return dbConnection.dbQueryUsers(query);
+    return dbConnection.dbQueryUsers(parameters, query);
   }
 
   public Uuid userGeneration() {
@@ -289,11 +413,18 @@ public final class Model {
   }
 
   public void add(Conversation conversation) {
+    String query;
+    Vector<String> parameters = new Vector<>();
 
     try {
-      dbConnection.dbUpdate("INSERT INTO CONVERSATIONS (ID,CNAME,OWNERID,TimeCreated) " +
-          "VALUES (" + SQLFormatter.sqlID(conversation.id) + ", " + SQLFormatter.sqlName(conversation.title) + ", " +
-          SQLFormatter.sqlID(conversation.owner) + ", " + SQLFormatter.sqlCreationTime(conversation.creation) + ");");
+      parameters.add(SQLFormatter.sqlID(conversation.id));
+      parameters.add(SQLFormatter.sqlName(conversation.title));
+      parameters.add(SQLFormatter.sqlID(conversation.owner));
+      parameters.add(SQLFormatter.sqlCreationTime(conversation.creation));
+      query = "INSERT INTO CONVERSATIONS (ID,CNAME,OWNERID,TimeCreated) " +
+          "VALUES ( ?, ?, ?, ?);";
+
+      dbConnection.dbUpdate(parameters, query);
 
       LOG.info("Conversation added: " + conversation.id);
     } catch (Exception e) {
@@ -308,9 +439,17 @@ public final class Model {
 
   // Add user to a conversation
   public void add(Uuid user, Uuid conversation) {
+    String query;
+    Vector<String> parameters = new Vector<>();
+
     try {
-      dbConnection.dbUpdate("INSERT INTO USER_CONVERSATION (ID, USERID, CONVERSATIONID) " +
-          "VALUES (" + SQLFormatter.sqlID(user, conversation) + ", " + SQLFormatter.sqlID(user) + ", " + SQLFormatter.sqlID(conversation) + ");");
+      parameters.add(SQLFormatter.sqlID(user, conversation));
+      parameters.add(SQLFormatter.sqlID(user));
+      parameters.add(SQLFormatter.sqlID(conversation));
+      query = "INSERT INTO USER_CONVERSATION (ID, USERID, CONVERSATIONID) " +
+          "VALUES ( ?, ?, ?);";
+
+      dbConnection.dbUpdate(parameters, query);
     } catch (Exception e) {
       LOG.info(
           "Adding user to conversation fail - Verify connection and try again shortly");
@@ -320,13 +459,21 @@ public final class Model {
   }
 
   public void update(Conversation conversation) {
+    String query;
+    Vector<String> parameters = new Vector<>();
+
     try {
-      dbConnection.dbUpdate("UPDATE CONVERSATIONS set" +
-          " CNAME = " + SQLFormatter.sqlName(conversation.title) + ", " +
-          " OWNERID = " + SQLFormatter.sqlID(conversation.owner) + ", " +
-          " TimeCreated = " + SQLFormatter.sqlCreationTime(conversation.creation) +
-          " where ID = " + SQLFormatter.sqlID(conversation.id) +
-          ";");
+      parameters.add(SQLFormatter.sqlName(conversation.title));
+      parameters.add(SQLFormatter.sqlID(conversation.owner));
+      parameters.add(SQLFormatter.sqlCreationTime(conversation.creation));
+      parameters.add(SQLFormatter.sqlID(conversation.id));
+      query = "UPDATE CONVERSATIONS set" +
+          " CNAME = ?, " +
+          " OWNERID = ?, " +
+          " TimeCreated = ?" +
+          " where ID = ?;";
+
+      dbConnection.dbUpdate(parameters, query);
       LOG.info(
           "updateConversation success (conversation.id=%s conversation.name=%s conversation.time=%s)",
           conversation.id,
@@ -343,7 +490,7 @@ public final class Model {
     }
   }
 
-  public Collection<Conversation> conversationById(String where, boolean orderASC) {
+  public Collection<Conversation> conversationById(Vector<String> parameters, String where, boolean orderASC) {
 
     Collection<Conversation> conversations = new HashSet<>();
 
@@ -356,14 +503,28 @@ public final class Model {
       query += " ORDER BY ID DESC";
     query += ";";
 
-    Collection<Conversation> found = dbConnection.dbQueryConversations(query);
+    Collection<Conversation> found = dbConnection.dbQueryConversations(parameters, query);
+
+    parameters.clear();
 
     for (Conversation conv : found) {
-      conv.firstMessage = dbConnection.getConversationData("SELECT * FROM MESSAGES where CONVERSATIONID = " + SQLFormatter.sqlID(conv.id) + " AND MPREVID = " + SQLFormatter.sqlID(Uuid.NULL) + ";");
+
+      parameters.clear();
+      parameters.add(SQLFormatter.sqlID(conv.id));
+      parameters.add(SQLFormatter.sqlID(Uuid.NULL));
+      conv.firstMessage = dbConnection.getConversationData(parameters, "SELECT * FROM MESSAGES where CONVERSATIONID = ? AND MPREVID = ?;");
+
       if (conv.firstMessage == null)
         conv.firstMessage = Uuid.NULL;
-      conv.lastMessage = dbConnection.getConversationData("SELECT * FROM MESSAGES where CONVERSATIONID = " + SQLFormatter.sqlID(conv.id) + " AND MNEXTID = " + SQLFormatter.sqlID(Uuid.NULL) + ";");
-      conv.users = dbConnection.getUsersInConversations("SELECT * FROM USER_CONVERSATION where CONVERSATIONID = " + SQLFormatter.sqlID(conv.id) + ";");
+
+      parameters.clear();
+      parameters.add(SQLFormatter.sqlID(conv.id));
+      parameters.add(SQLFormatter.sqlID(Uuid.NULL));
+      conv.lastMessage = dbConnection.getConversationData(parameters,"SELECT * FROM MESSAGES where CONVERSATIONID = ? AND MNEXTID = ?;");
+
+      parameters.clear();
+      parameters.add(SQLFormatter.sqlID(conv.id));
+      conv.users = dbConnection.getUsersInConversations(parameters, "SELECT * FROM USER_CONVERSATION where CONVERSATIONID = ?;");
 
       conversations.add(conv);
     }
@@ -371,7 +532,9 @@ public final class Model {
     return conversations;
   }
 
-  public Collection<Conversation> conversationByTime(String where, boolean orderASC) {
+  public Collection<Conversation> conversationByTime(Vector<String> parameters, String where, boolean orderASC) {
+    Collection<Conversation> conversations = new ArrayList<>();
+
     String query = "SELECT * FROM CONVERSATIONS";
     if (where != null)
       query += " where " + where;
@@ -380,10 +543,39 @@ public final class Model {
     else
       query += " ORDER BY TimeCreated DESC";
     query += ";";
-    return dbConnection.dbQueryConversations(query);
+
+    Collection<Conversation> found = dbConnection.dbQueryConversations(parameters, query);
+
+    parameters.clear();
+
+    for (Conversation conv : found) {
+
+      parameters.clear();
+      parameters.add(SQLFormatter.sqlID(conv.id));
+      parameters.add(SQLFormatter.sqlID(Uuid.NULL));
+      conv.firstMessage = dbConnection.getConversationData(parameters, "SELECT * FROM MESSAGES where CONVERSATIONID = ? AND MPREVID = ?;");
+
+      if (conv.firstMessage == null)
+        conv.firstMessage = Uuid.NULL;
+
+      parameters.clear();
+      parameters.add(SQLFormatter.sqlID(conv.id));
+      parameters.add(SQLFormatter.sqlID(Uuid.NULL));
+      conv.lastMessage = dbConnection.getConversationData(parameters,"SELECT * FROM MESSAGES where CONVERSATIONID = ? AND MNEXTID = ?;");
+
+      parameters.clear();
+      parameters.add(SQLFormatter.sqlID(conv.id));
+      conv.users = dbConnection.getUsersInConversations(parameters, "SELECT * FROM USER_CONVERSATION where CONVERSATIONID = ?;");
+
+      conversations.add(conv);
+    }
+
+    return conversations;
   }
 
-  public Collection<Conversation> conversationByText(String where, boolean orderASC) {
+  public Collection<Conversation> conversationByText(Vector<String> parameters, String where, boolean orderASC) {
+    Collection<Conversation> conversations = new ArrayList<>();
+
     String query = "SELECT * FROM CONVERSATIONS";
     if (where != null)
       query += " where " + where;
@@ -392,19 +584,52 @@ public final class Model {
     else
       query += " ORDER BY CNAME DESC";
     query += ";";
-    return dbConnection.dbQueryConversations(query);
+
+    Collection<Conversation> found = dbConnection.dbQueryConversations(parameters, query);
+
+    parameters.clear();
+
+    for (Conversation conv : found) {
+
+      parameters.clear();
+      parameters.add(SQLFormatter.sqlID(conv.id));
+      parameters.add(SQLFormatter.sqlID(Uuid.NULL));
+      conv.firstMessage = dbConnection.getConversationData(parameters, "SELECT * FROM MESSAGES where CONVERSATIONID = ? AND MPREVID = ?;");
+
+      if (conv.firstMessage == null)
+        conv.firstMessage = Uuid.NULL;
+
+      parameters.clear();
+      parameters.add(SQLFormatter.sqlID(conv.id));
+      parameters.add(SQLFormatter.sqlID(Uuid.NULL));
+      conv.lastMessage = dbConnection.getConversationData(parameters,"SELECT * FROM MESSAGES where CONVERSATIONID = ? AND MNEXTID = ?;");
+
+      parameters.clear();
+      parameters.add(SQLFormatter.sqlID(conv.id));
+      conv.users = dbConnection.getUsersInConversations(parameters, "SELECT * FROM USER_CONVERSATION where CONVERSATIONID = ?;");
+
+      conversations.add(conv);
+    }
+
+    return conversations;
   }
 
   public void add(Message message, Uuid conversation) {
+    String query;
+    Vector<String> parameters = new Vector<>();
+
     try {
-      dbConnection.dbUpdate("INSERT INTO MESSAGES (ID,USERID,MNEXTID,MPREVID,CONVERSATIONID,TimeCreated,MESSAGE) " +
-          "VALUES (" + SQLFormatter.sqlID(message.id) + ", " +
-          SQLFormatter.sqlID(message.author) + ", " +
-          SQLFormatter.sqlID(message.next) + ", " +
-          SQLFormatter.sqlID(message.previous) + ", " +
-          SQLFormatter.sqlID(conversation) + ", " +
-          SQLFormatter.sqlCreationTime(message.creation) + ", " +
-          SQLFormatter.sqlBody(message.content) + ");");
+      parameters.add(SQLFormatter.sqlID(message.id));
+      parameters.add(SQLFormatter.sqlID(message.author));
+      parameters.add(SQLFormatter.sqlID(message.next));
+      parameters.add(SQLFormatter.sqlID(message.previous));
+      parameters.add(SQLFormatter.sqlID(conversation));
+      parameters.add(SQLFormatter.sqlCreationTime(message.creation));
+      parameters.add(SQLFormatter.sqlBody(message.content));
+      query = "INSERT INTO MESSAGES (ID,USERID,MNEXTID,MPREVID,CONVERSATIONID,TimeCreated,MESSAGE) " +
+          "VALUES ( ?, ?, ?, ?, ?, ?, ?);";
+
+      dbConnection.dbUpdate(parameters, query);
 
       LOG.info("Message added: " + message.id);
     } catch (Exception e) {
@@ -416,15 +641,25 @@ public final class Model {
   }
 
   public void update(Message message) {
+    String query;
+    Vector<String> parameters = new Vector<>();
+
     try {
-      dbConnection.dbUpdate("UPDATE MESSAGES SET" +
-          " USERID = " + SQLFormatter.sqlID(message.author) + "," +
-          " MNEXTID = " + SQLFormatter.sqlID(message.next) + "," +
-          " MPREVID = " + SQLFormatter.sqlID(message.previous) + "," +
-          " TimeCreated = " + SQLFormatter.sqlCreationTime(message.creation) + "," +
-          " MESSAGE = " + SQLFormatter.sqlBody(message.content) +
-          " where ID = " + SQLFormatter.sqlID(message.id) +
-          ";");
+      parameters.add(SQLFormatter.sqlID(message.author));
+      parameters.add(SQLFormatter.sqlID(message.next));
+      parameters.add(SQLFormatter.sqlID(message.previous));
+      parameters.add(SQLFormatter.sqlCreationTime(message.creation));
+      parameters.add(SQLFormatter.sqlBody(message.content));
+      parameters.add(SQLFormatter.sqlID(message.id));
+      query = "UPDATE MESSAGES SET" +
+          " USERID = ?," +
+          " MNEXTID = ?," +
+          " MPREVID = ?," +
+          " TimeCreated = ?," +
+          " MESSAGE = ?" +
+          " where ID = ?;";
+
+      dbConnection.dbUpdate(parameters, query);
       LOG.info(
           "updateMessage success (message.id=%s message.time=%s)",
           message.id,
@@ -439,7 +674,7 @@ public final class Model {
     }
   }
 
-  public Collection<Message> messageById(String where, boolean orderASC) {
+  public Collection<Message> messageById(Vector<String> parameters, String where, boolean orderASC) {
     String query = "SELECT * FROM MESSAGES";
     if (where != null)
       query += " where " + where;
@@ -448,10 +683,10 @@ public final class Model {
     else
       query += " ORDER BY ID DESC";
     query += ";";
-    return dbConnection.dbQueryMessages(query);
+    return dbConnection.dbQueryMessages(parameters, query);
   }
 
-  public Collection<Message> messageByTime(String where, boolean orderASC) {
+  public Collection<Message> messageByTime(Vector<String> parameters, String where, boolean orderASC) {
     String query = "SELECT * FROM MESSAGES";
     if (where != null)
       query += " where " + where;
@@ -460,10 +695,10 @@ public final class Model {
     else
       query += " ORDER BY TimeCreated DESC";
     query += ";";
-    return dbConnection.dbQueryMessages(query);
+    return dbConnection.dbQueryMessages(parameters, query);
   }
 
-  public Collection<Message> messageByText(String where, boolean orderASC) {
+  public Collection<Message> messageByText(Vector<String> parameters, String where, boolean orderASC) {
     String query = "SELECT * FROM MESSAGES";
     if (where != null)
       query += " where " + where;
@@ -472,11 +707,13 @@ public final class Model {
     else
       query += " ORDER BY MESSAGE DESC";
     query += ";";
-    return dbConnection.dbQueryMessages(query);
+    return dbConnection.dbQueryMessages(parameters, query);
   }
 
   public Uuid conversationID(Uuid message) {
-    String query = "SELECT CONVERSATIONID FROM MESSAGES WHERE ID = " + SQLFormatter.sqlID(message) + ";";
-    return dbConnection.getConversationID(query);
+    Vector<String> parameters = new Vector<>();
+    parameters.add(SQLFormatter.sqlID(message));
+    String query = "SELECT CONVERSATIONID FROM MESSAGES WHERE ID = ?;";
+    return dbConnection.getConversationID(parameters, query);
   }
 }

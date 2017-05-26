@@ -46,7 +46,7 @@ public final class View implements BasicView, LogicalView, SinglesView {
 
   @Override
   public Collection<User> getUsers(Collection<Uuid> ids) {
-    return model.userById(Model.intersect(ids, false), true);
+    return model.userById(ids, false, true);
   }
 
   @Override
@@ -64,12 +64,12 @@ public final class View implements BasicView, LogicalView, SinglesView {
 
   @Override
   public Collection<Conversation> getConversations(Collection<Uuid> ids) {
-    return model.conversationById(Model.intersect(ids, false), true);
+    return model.conversationById(ids, false, true);
   }
 
   @Override
   public Collection<Message> getMessages(Collection<Uuid> ids) {
-    return model.messageByTime(Model.intersect(ids, false), true);
+    return model.messageByTime(ids, false, true);
   }
 
   @Override
@@ -79,7 +79,7 @@ public final class View implements BasicView, LogicalView, SinglesView {
 
   @Override
   public Collection<User> getUsersExcluding(Collection<Uuid> ids) {
-    return model.userById(Model.intersect(ids, true), true);
+    return model.userById(ids, true, true);
   }
 
   @Override
