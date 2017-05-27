@@ -114,7 +114,7 @@ public final class Model {
     parameters.add("Admin");
     query = "UNAME = ?";
 
-    Collection<User> returnUser = userById(parameters, query, true);
+    Collection<User> returnUser = userById(parameters, query);
     if(!returnUser.isEmpty()){
       return returnUser.iterator().next();
     }
@@ -130,7 +130,7 @@ public final class Model {
     parameters.add(SQLFormatter.sqlID(userID));
     query = "ID = ?";
 
-    Collection<User> returnUser = userById(parameters, query, true);
+    Collection<User> returnUser = userById(parameters, query);
     if(!returnUser.isEmpty()){
       return returnUser.iterator().next();
     }
@@ -139,16 +139,16 @@ public final class Model {
     }
   }
 
-  public Collection<User> userById(Collection<Uuid> ids, boolean isBlackList, boolean orderASC) {
+  public Collection<User> userById(Collection<Uuid> ids, boolean isBlackList) {
     String query;
     Vector<String> parameters = new Vector<>();
 
     query = intersect(parameters, ids, isBlackList);
 
-    return userById(parameters, query, orderASC);
+    return userById(parameters, query);
   }
 
-  public Collection<User> getAllUsers(Uuid conversation, boolean orderASC) {
+  public Collection<User> getAllUsers(Uuid conversation) {
     String query;
     Vector<String> parameters = new Vector<>();
 
@@ -159,10 +159,10 @@ public final class Model {
       parameters.clear();
       query = intersect(parameters, usersIDs, false);
 
-      return userById(parameters, query, orderASC);
+      return userById(parameters, query);
     }
     else {
-      return userById(parameters, null, true);
+      return userById(parameters, null);
     }
   }
 
@@ -173,7 +173,7 @@ public final class Model {
     parameters.add(SQLFormatter.sqlID(conversationID));
     query = "ID = ?";
 
-    Collection<Conversation> returnConversation = conversationById(parameters, query, true);
+    Collection<Conversation> returnConversation = conversationById(parameters, query);
 
     if(!returnConversation.isEmpty()){
       return returnConversation.iterator().next();
@@ -183,16 +183,16 @@ public final class Model {
     }
   }
 
-  public Collection<Conversation> conversationById(Collection<Uuid> ids, boolean isBlackList, boolean orderASC) {
+  public Collection<Conversation> conversationById(Collection<Uuid> ids, boolean isBlackList) {
     String query;
     Vector<String> parameters = new Vector<>();
 
     query = intersect(parameters, ids, isBlackList);
 
-    return conversationById(parameters, query, orderASC);
+    return conversationById(parameters, query);
   }
 
-  public Collection<Conversation> getAllConversations(Uuid user, boolean orderASC) {
+  public Collection<Conversation> getAllConversations(Uuid user) {
     String query;
     Vector<String> parameters = new Vector<>();
 
@@ -207,14 +207,14 @@ public final class Model {
       parameters.clear();
       query = intersect(parameters, conversationsIDs, false);
 
-      return conversationById(parameters, query, orderASC);
+      return conversationById(parameters, query);
     }
     else {
-      return conversationById(parameters, null, orderASC);
+      return conversationById(parameters, null);
     }
   }
 
-  public Collection<Conversation> getConversationsInRange(Time start, Time end, boolean orderASC) {
+  public Collection<Conversation> getConversationsInRange(Time start, Time end) {
     String query;
     Vector<String> parameters = new Vector<>();
 
@@ -222,17 +222,17 @@ public final class Model {
     parameters.add(SQLFormatter.sqlCreationTime(end));
     query = "TimeCreated >= ? AND TimeCreated <= ?";
 
-    return conversationByTime(parameters, query, orderASC);
+    return conversationByTime(parameters, query);
   }
 
-  public Collection<Conversation> getConversationsByFilter(String filter, boolean orderASC) {
+  public Collection<Conversation> getConversationsByFilter(String filter) {
     String query;
     Vector<String> parameters = new Vector<>();
 
     parameters.add(filter);
     query = "CNAME LIKE '%?%'";
 
-    return conversationByText(parameters, query, orderASC);
+    return conversationByText(parameters, query);
   }
 
   public Message getSingleMessage(Uuid messageID) {
@@ -242,7 +242,7 @@ public final class Model {
     parameters.add(SQLFormatter.sqlID(messageID));
     query = "ID = ?";
 
-    Collection<Message> returnMessage = messageById(parameters, query, true);
+    Collection<Message> returnMessage = messageById(parameters, query);
     if(!returnMessage.isEmpty()){
       return returnMessage.iterator().next();
     }
@@ -251,13 +251,13 @@ public final class Model {
     }
   }
 
-  public Collection<Message> messageByTime(Collection<Uuid> ids, boolean isBlackList, boolean orderASC) {
+  public Collection<Message> messageByTime(Collection<Uuid> ids, boolean isBlackList) {
     String query;
     Vector<String> parameters = new Vector<>();
 
     query = intersect(parameters, ids, isBlackList);
 
-    return messageByTime(parameters, query, orderASC);
+    return messageByTime(parameters, query);
   }
 
   public Message getLastMessage(Uuid conversationID) {
@@ -267,7 +267,7 @@ public final class Model {
     parameters.add(SQLFormatter.sqlID(conversationID));
     query = "MNEXTID == '0' AND CONVERSATIONID = ?";
 
-    Collection<Message> lastMessage = messageById(parameters, query, false);
+    Collection<Message> lastMessage = messageById(parameters, query);
     if(!lastMessage.isEmpty()){
       return lastMessage.iterator().next();
     }
@@ -276,7 +276,7 @@ public final class Model {
     }
   }
 
-  public Collection<Message> getMessagesInRange(Uuid conversation, Time start, Time end, boolean orderASC) {
+  public Collection<Message> getMessagesInRange(Uuid conversation, Time start, Time end) {
     String query;
     Vector<String> parameters = new Vector<>();
 
@@ -285,7 +285,7 @@ public final class Model {
     parameters.add(SQLFormatter.sqlCreationTime(end));
     query = "CONVERSATIONID = ? AND TimeCreated >= ? AND TimeCreated <= ?";
 
-    return messageByTime(parameters, query, orderASC);
+    return messageByTime(parameters, query);
   }
 
   public void add(User user) {
@@ -319,24 +319,24 @@ public final class Model {
     }
   }
 
-  public Collection<Message> getAllMessagesInConversation(Uuid conversation, boolean orderASC) {
+  public Collection<Message> getAllMessagesInConversation(Uuid conversation) {
     String query;
     Vector<String> parameters = new Vector<>();
 
     parameters.add(SQLFormatter.sqlID(conversation));
     query = "CONVERSATIONID = ?;";
 
-    return messageByTime(parameters, query, orderASC);
+    return messageByTime(parameters, query);
   }
 
-  public Collection<Message> getAllMessagesFromUser(Uuid user, boolean orderASC) {
+  public Collection<Message> getAllMessagesFromUser(Uuid user) {
     String query;
     Vector<String> parameters = new Vector<>();
 
     parameters.add(SQLFormatter.sqlID(user));
     query = "USERID = ?;";
 
-    return messageByTime(parameters, query, orderASC);
+    return messageByTime(parameters, query);
   }
 
   public void update(User user) {
@@ -372,39 +372,27 @@ public final class Model {
     }
   }
 
-  public Collection<User> userById(Vector<String> parameters, String where, boolean orderASC) {
+  public Collection<User> userById(Vector<String> parameters, String where) {
     String query = "SELECT * FROM USERS";
     if (where != null)
       query += " where " + where;
-    if (orderASC)
-      query += " ORDER BY ID ASC";
-    else
-      query += " ORDER BY ID DESC";
-    query += ";";
+    query += " ORDER BY ID ASC;";
     return dbConnection.dbQueryUsers(parameters, query);
   }
 
-  public Collection<User> userByTime(Vector<String> parameters, String where, boolean orderASC) {
+  public Collection<User> userByTime(Vector<String> parameters, String where) {
     String query = "SELECT * FROM USERS";
     if (where != null)
       query += " where " + where;
-    if (orderASC)
-      query += " ORDER BY TimeCreated ASC";
-    else
-      query += " ORDER BY TimeCreated DESC";
-    query += ";";
+    query += " ORDER BY TimeCreated ASC;";
     return dbConnection.dbQueryUsers(parameters, query);
   }
 
-  public Collection<User> userByText(Vector<String> parameters, String where, boolean orderASC) {
+  public Collection<User> userByText(Vector<String> parameters, String where) {
     String query = "SELECT * FROM USERS";
     if (where != null)
       query += " where " + where;
-    if (orderASC)
-      query += " ORDER BY UNAME ASC";
-    else
-      query += " ORDER BY UNAME DESC";
-    query += ";";
+    query += " ORDER BY UNAME ASC;";
     return dbConnection.dbQueryUsers(parameters, query);
   }
 
@@ -490,18 +478,14 @@ public final class Model {
     }
   }
 
-  public Collection<Conversation> conversationById(Vector<String> parameters, String where, boolean orderASC) {
+  public Collection<Conversation> conversationById(Vector<String> parameters, String where) {
 
     Collection<Conversation> conversations = new HashSet<>();
 
     String query = "SELECT * FROM CONVERSATIONS";
     if (where != null)
       query += " where " + where;
-    if (orderASC)
-      query += " ORDER BY ID ASC";
-    else
-      query += " ORDER BY ID DESC";
-    query += ";";
+    query += " ORDER BY ID ASC;";
 
     Collection<Conversation> found = dbConnection.dbQueryConversations(parameters, query);
 
@@ -532,17 +516,13 @@ public final class Model {
     return conversations;
   }
 
-  public Collection<Conversation> conversationByTime(Vector<String> parameters, String where, boolean orderASC) {
+  public Collection<Conversation> conversationByTime(Vector<String> parameters, String where) {
     Collection<Conversation> conversations = new ArrayList<>();
 
     String query = "SELECT * FROM CONVERSATIONS";
     if (where != null)
       query += " where " + where;
-    if (orderASC)
-      query += " ORDER BY TimeCreated ASC";
-    else
-      query += " ORDER BY TimeCreated DESC";
-    query += ";";
+    query += " ORDER BY TimeCreated ASC;";
 
     Collection<Conversation> found = dbConnection.dbQueryConversations(parameters, query);
 
@@ -573,17 +553,13 @@ public final class Model {
     return conversations;
   }
 
-  public Collection<Conversation> conversationByText(Vector<String> parameters, String where, boolean orderASC) {
+  public Collection<Conversation> conversationByText(Vector<String> parameters, String where) {
     Collection<Conversation> conversations = new ArrayList<>();
 
     String query = "SELECT * FROM CONVERSATIONS";
     if (where != null)
       query += " where " + where;
-    if (orderASC)
-      query += " ORDER BY CNAME ASC";
-    else
-      query += " ORDER BY CNAME DESC";
-    query += ";";
+    query += " ORDER BY CNAME ASC;";
 
     Collection<Conversation> found = dbConnection.dbQueryConversations(parameters, query);
 
@@ -674,39 +650,27 @@ public final class Model {
     }
   }
 
-  public Collection<Message> messageById(Vector<String> parameters, String where, boolean orderASC) {
+  public Collection<Message> messageById(Vector<String> parameters, String where) {
     String query = "SELECT * FROM MESSAGES";
     if (where != null)
       query += " where " + where;
-    if (orderASC)
-      query += " ORDER BY ID ASC";
-    else
-      query += " ORDER BY ID DESC";
-    query += ";";
+    query += " ORDER BY ID ASC;";
     return dbConnection.dbQueryMessages(parameters, query);
   }
 
-  public Collection<Message> messageByTime(Vector<String> parameters, String where, boolean orderASC) {
+  public Collection<Message> messageByTime(Vector<String> parameters, String where) {
     String query = "SELECT * FROM MESSAGES";
     if (where != null)
       query += " where " + where;
-    if (orderASC)
-      query += " ORDER BY TimeCreated ASC";
-    else
-      query += " ORDER BY TimeCreated DESC";
-    query += ";";
+    query += " ORDER BY TimeCreated ASC;";
     return dbConnection.dbQueryMessages(parameters, query);
   }
 
-  public Collection<Message> messageByText(Vector<String> parameters, String where, boolean orderASC) {
+  public Collection<Message> messageByText(Vector<String> parameters, String where) {
     String query = "SELECT * FROM MESSAGES";
     if (where != null)
       query += " where " + where;
-    if (orderASC)
-      query += " ORDER BY MESSAGE ASC";
-    else
-      query += " ORDER BY MESSAGE DESC";
-    query += ";";
+    query += " ORDER BY MESSAGE ASC;";
     return dbConnection.dbQueryMessages(parameters, query);
   }
 

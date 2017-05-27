@@ -46,7 +46,7 @@ public final class View implements BasicView, LogicalView, SinglesView {
 
   @Override
   public Collection<User> getUsers(Collection<Uuid> ids) {
-    return model.userById(ids, false, true);
+    return model.userById(ids, false);
   }
 
   @Override
@@ -54,7 +54,7 @@ public final class View implements BasicView, LogicalView, SinglesView {
 
     final Collection<ConversationSummary> summaries = new ArrayList<>();
 
-    for (final Conversation conversation : model.getAllConversations(Uuid.NULL,true)) {
+    for (final Conversation conversation : model.getAllConversations(Uuid.NULL)) {
       summaries.add(conversation.summary);
     }
 
@@ -64,12 +64,12 @@ public final class View implements BasicView, LogicalView, SinglesView {
 
   @Override
   public Collection<Conversation> getConversations(Collection<Uuid> ids) {
-    return model.conversationById(ids, false, true);
+    return model.conversationById(ids, false);
   }
 
   @Override
   public Collection<Message> getMessages(Collection<Uuid> ids) {
-    return model.messageByTime(ids, false, true);
+    return model.messageByTime(ids, false);
   }
 
   @Override
@@ -79,13 +79,13 @@ public final class View implements BasicView, LogicalView, SinglesView {
 
   @Override
   public Collection<User> getUsersExcluding(Collection<Uuid> ids) {
-    return model.userById(ids, true, true);
+    return model.userById(ids, true);
   }
 
   @Override
   public Collection<Conversation> getConversations(Time start, Time end) {
 
-    final Collection<Conversation> conversations = model.getConversationsInRange(start, end, true);
+    final Collection<Conversation> conversations = model.getConversationsInRange(start, end);
 
     return conversations;
 
@@ -94,7 +94,7 @@ public final class View implements BasicView, LogicalView, SinglesView {
   @Override
   public Collection<Conversation> getConversations(String filter) {
 
-    final Collection<Conversation> found = model.getConversationsByFilter(filter, true);
+    final Collection<Conversation> found = model.getConversationsByFilter(filter);
 
     return found;
   }
@@ -102,7 +102,7 @@ public final class View implements BasicView, LogicalView, SinglesView {
   @Override
   public Collection<Message> getMessages(Uuid conversation, Time start, Time end) {
 
-    final Collection<Message> foundMessages = model.getMessagesInRange(conversation, start, end, true);
+    final Collection<Message> foundMessages = model.getMessagesInRange(conversation, start, end);
 
     return foundMessages;
   }
@@ -121,7 +121,7 @@ public final class View implements BasicView, LogicalView, SinglesView {
 
     Uuid conversation = model.conversationID(rootMessage);
 
-    final Collection<Message> allMessages = model.getAllMessagesInConversation(conversation, true);
+    final Collection<Message> allMessages = model.getAllMessagesInConversation(conversation);
 
     // i <= remaining : must be "<=" and not just "<" or else "range = 0" would
     // return nothing and we want it to return just the root because the description
