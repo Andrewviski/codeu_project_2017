@@ -12,11 +12,9 @@ import java.util.*;
 public final class DataBaseConnection {
 
   private Connection c = null;
-  private PreparedStatement stmt = null;
 
   public DataBaseConnection() {
     c = null;
-    stmt = null;
   }
 
   private void open() {
@@ -47,6 +45,7 @@ public final class DataBaseConnection {
 
   public boolean dbUpdate(Vector<String> parameters, String str) {
     open();
+    PreparedStatement stmt = null;
     boolean status = true;
     int parCounter = 1;
 
@@ -73,6 +72,7 @@ public final class DataBaseConnection {
 
   public Collection<User> dbQueryUsers(Vector<String> parameters, String str) {
 
+    PreparedStatement stmt = null;
     final Collection<User> found = new ArrayList<>();
     int parCounter = 1;
 
@@ -112,6 +112,7 @@ public final class DataBaseConnection {
 
   public Collection<Conversation> dbQueryConversations(Vector<String> parameters, String str) {
 
+    PreparedStatement stmt = null;
     final Collection<Conversation> found = new ArrayList<>();
     int parCounter = 1;
 
@@ -151,6 +152,7 @@ public final class DataBaseConnection {
 
   public Uuid getConversationData(Vector<String> parameters, String str) {
 
+    PreparedStatement stmt = null;
     Uuid found = null;
     int parCounter = 1;
 
@@ -186,6 +188,7 @@ public final class DataBaseConnection {
 
   public Uuid getConversationID(Vector<String> parameters, String str) {
 
+    PreparedStatement stmt = null;
     Uuid found = null;
     int parCounter = 1;
 
@@ -217,6 +220,8 @@ public final class DataBaseConnection {
   }
 
   public Collection<Uuid> getUsersInConversations(Vector<String> parameters, String str) {
+
+    PreparedStatement stmt = null;
     final Collection<Uuid> found = new ArrayList<>();
     int parCounter = 1;
 
@@ -250,6 +255,8 @@ public final class DataBaseConnection {
   }
 
   public Collection<Uuid> getConversationsOfUser(Vector<String> parameters, String str) {
+
+    PreparedStatement stmt = null;
     final Collection<Uuid> found = new ArrayList<>();
     int parCounter = 1;
 
@@ -284,6 +291,7 @@ public final class DataBaseConnection {
 
   public Collection<Message> dbQueryMessages(Vector<String> parameters, String str) {
 
+    PreparedStatement stmt = null;
     final Collection<Message> found = new ArrayList<>();
     int parCounter = 1;
 
@@ -335,6 +343,7 @@ public final class DataBaseConnection {
 
   public void createTables() {
     c = null;
+    PreparedStatement stmt = null;
     open();
     try {
       String sql = "CREATE TABLE USERS " +

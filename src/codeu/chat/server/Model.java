@@ -229,7 +229,7 @@ public final class Model {
     String query;
     Vector<String> parameters = new Vector<>();
 
-    parameters.add(SQLFormatter.sqlContainsText(filter));
+    parameters.add(filter);
     query = "CNAME LIKE '%?%'";
 
     return conversationByText(parameters, query, orderASC);
@@ -296,9 +296,9 @@ public final class Model {
 
     try {
       parameters.add(SQLFormatter.sqlID(user.id));
-      parameters.add(SQLFormatter.sqlName(user.name));
+      parameters.add(user.name);
       parameters.add(SQLFormatter.sqlCreationTime(user.creation));
-      parameters.add(SQLFormatter.sqlPassword(user.password));
+      parameters.add(user.password);
       query = "INSERT INTO USERS (ID,UNAME,TIMECREATED,PASSWORD) " +
           "VALUES ( ?, ?, ?, ?);";
 
@@ -344,9 +344,9 @@ public final class Model {
     Vector<String> parameters = new Vector<>();
 
     try {
-      parameters.add(SQLFormatter.sqlName(user.name));
+      parameters.add(user.name);
       parameters.add(SQLFormatter.sqlCreationTime(user.creation));
-      parameters.add(SQLFormatter.sqlName(user.password));
+      parameters.add(user.password);
       parameters.add(SQLFormatter.sqlID(user.id));
       query = "UPDATE USERS set" +
           " UNAME = ?," +
@@ -418,7 +418,7 @@ public final class Model {
 
     try {
       parameters.add(SQLFormatter.sqlID(conversation.id));
-      parameters.add(SQLFormatter.sqlName(conversation.title));
+      parameters.add(conversation.title);
       parameters.add(SQLFormatter.sqlID(conversation.owner));
       parameters.add(SQLFormatter.sqlCreationTime(conversation.creation));
       query = "INSERT INTO CONVERSATIONS (ID,CNAME,OWNERID,TimeCreated) " +
@@ -463,7 +463,7 @@ public final class Model {
     Vector<String> parameters = new Vector<>();
 
     try {
-      parameters.add(SQLFormatter.sqlName(conversation.title));
+      parameters.add(conversation.title);
       parameters.add(SQLFormatter.sqlID(conversation.owner));
       parameters.add(SQLFormatter.sqlCreationTime(conversation.creation));
       parameters.add(SQLFormatter.sqlID(conversation.id));
@@ -625,7 +625,7 @@ public final class Model {
       parameters.add(SQLFormatter.sqlID(message.previous));
       parameters.add(SQLFormatter.sqlID(conversation));
       parameters.add(SQLFormatter.sqlCreationTime(message.creation));
-      parameters.add(SQLFormatter.sqlBody(message.content));
+      parameters.add(message.content);
       query = "INSERT INTO MESSAGES (ID,USERID,MNEXTID,MPREVID,CONVERSATIONID,TimeCreated,MESSAGE) " +
           "VALUES ( ?, ?, ?, ?, ?, ?, ?);";
 
@@ -649,7 +649,7 @@ public final class Model {
       parameters.add(SQLFormatter.sqlID(message.next));
       parameters.add(SQLFormatter.sqlID(message.previous));
       parameters.add(SQLFormatter.sqlCreationTime(message.creation));
-      parameters.add(SQLFormatter.sqlBody(message.content));
+      parameters.add(message.content);
       parameters.add(SQLFormatter.sqlID(message.id));
       query = "UPDATE MESSAGES SET" +
           " USERID = ?," +
