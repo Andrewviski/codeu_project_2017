@@ -7,69 +7,70 @@ import codeu.chat.server.Model;
  */
 public class Mood {
 
-    private double moods[] = new double[12];
+  private double moods[] = new double[12];
 
-    public Mood() {
-        for(int i = 0; i < 12; i++) {
-            moods[i] = 0;
-        }
+  public Mood() {
+    for (int i = 0; i < 12; i++) {
+      moods[i] = 0;
+    }
+  }
+
+  public Mood(int mood) {
+    for (int i = 0; i < 12; i++) {
+      moods[i] = 0;
     }
 
-    public Mood(int mood) {
-        for(int i = 0; i < 12; i++) {
-            moods[i] = 0;
-        }
+    if (mood >= 0 && mood <= 12)
+      moods[mood] = 1;
+  }
 
-        moods[mood] = 1;
+  public void setMood(int mood, double value) {
+    this.moods[mood] = value;
+  }
+
+  public double getMood(int mood) {
+    return moods[mood];
+  }
+
+  public double[] getMoods() {
+    return moods;
+  }
+
+  public void add(Mood mood) {
+    for (int i = 0; i < 12; i++) {
+      moods[i] += mood.getMood(i);
+    }
+  }
+
+  public static Mood average(Mood mood, int users) {
+
+    Mood avg = new Mood();
+    double newMoods[] = new double[12];
+
+    if (users == 0) {
+      return avg;
     }
 
-    public void setMood(int mood, double value) {
-        this.moods[mood] = value;
+    for (int i = 0; i < 12; i++) {
+      avg.setMood(i, mood.getMood(i) / users);
     }
 
-    public double getMood(int mood) {
-        return moods[mood];
+    return avg;
+  }
+
+  public static double distance(Mood mood1, Mood mood2) {
+    double dist = 0;
+    if (mood1 == null) {
+      mood1 = new Mood();
     }
 
-    public double[] getMoods() {
-        return moods;
+    if (mood2 == null) {
+      mood2 = new Mood();
     }
 
-    public void add(Mood mood) {
-        for(int i = 0; i < 12; i++) {
-            moods[i] += mood.getMood(i);
-        }
+    for (int i = 0; i < 12; i++) {
+      dist += ((mood1.getMood(i) + mood2.getMood(i)) * (mood1.getMood(i) + mood2.getMood(i)));
     }
-
-    public static Mood average(Mood mood, int users) {
-
-        Mood avg = new Mood();
-        double newMoods[] = new double[12];
-
-        if(users == 0) {
-            return avg;
-        }
-
-        for(int i = 0; i < 12; i++) {
-            avg.setMood(i, mood.getMood(i)/users);
-        }
-
-        return avg;
-    }
-
-    public static double distance(Mood mood1, Mood mood2) {
-        double dist = 0;
-        if(mood1 == null) {
-            mood1 = new Mood();
-        }
-
-        if(mood2 == null) {
-            mood2 = new Mood();
-        }
-
-        for(int i = 0; i < 12; i++) {
-            dist += ((mood1.getMood(i) + mood2.getMood(i)) * (mood1.getMood(i) + mood2.getMood(i)));
-        }
-        return dist;
-    }
+    return dist;
+  }
 }
