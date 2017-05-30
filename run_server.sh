@@ -44,17 +44,29 @@ else
 
 
     if [ "$RELAY_ADDRESS" == "" ] ; then
+<<<<<<< HEAD
       java -cp ./third_party/sqlite-jdbc-3.16.1.jar:./third_party/stanford-postagger-2011-04-20/stanford-postagger.jar:./bin codeu.chat.ServerMain \
+=======
+      java -cp ./third_party/sqlite-jdbc-3.16.1.jar:./bin codeu.chat.ServerMain \
+>>>>>>> project_main
           "$TEAM_ID" \
           "$TEAM_SECRET" \
           "$PORT" \
           "$PERSISTENT_DIR"
     else
+<<<<<<< HEAD
       java -cp ./third_party/sqlite-jdbc-3.16.1.jar:./third_party/stanford-postagger-2011-04-20/stanford-postagger.jar:./bin codeu.chat.ServerMain \
+=======
+      java -cp ./third_party/sqlite-jdbc-3.16.1.jar:./bin codeu.chat.ServerMain \
+>>>>>>> project_main
           "$TEAM_ID" \
           "$TEAM_SECRET" \
           "$PORT" \
           "$PERSISTENT_DIR" \
           "$RELAY_ADDRESS"
     fi
+<<<<<<< HEAD
 fi
+=======
+fi
+>>>>>>> project_main
