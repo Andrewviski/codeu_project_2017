@@ -45,7 +45,7 @@ final class SimpleGuiClientMain {
     final RemoteAddress address = RemoteAddress.parse(args[0]);
 
     try (
-        final ConnectionSource source = new ClientConnectionSource(address.host, address.port)
+      final ConnectionSource source = new ClientConnectionSource(address.host, address.port)
     ) {
       final Controller controller = new Controller(source);
       final View view = new View(source);
