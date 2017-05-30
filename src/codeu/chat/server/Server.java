@@ -52,7 +52,7 @@ public final class Server {
   private final Relay relay;
   private Uuid lastSeen = Uuid.NULL;
 
-  public Server(final Uuid id, final byte[] secret, final Relay relay) throws IOException, ClassNotFoundException {
+  public Server(final Uuid id, final byte[] secret, final Relay relay) {
 
     this.id = id;
     this.secret = Arrays.copyOf(secret, secret.length);

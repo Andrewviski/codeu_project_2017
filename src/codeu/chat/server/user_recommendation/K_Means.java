@@ -14,9 +14,6 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.*;
 
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
-import edu.stanford.nlp.tagger.maxent.MaxentTagger;
-
 import javax.swing.text.html.HTMLDocument;
 
 /**
@@ -29,20 +26,17 @@ public class K_Means {
   private Collection<String> allKeyWords;
 
   private final Model model;
-  private MaxentTagger tagger;
 
-  public K_Means(Model model) throws IOException,
-      ClassNotFoundException {
+  public K_Means(Model model) {
 
     this.model = model;
     //Set the Model File to a correct location after build
-    tagger = new MaxentTagger("models/left3words-wsj-0-18.tagger");
   }
 
-  private String Tagger(String sentence) throws IOException,
-      ClassNotFoundException {
+  private String Tagger(String sentence) {
+    String taggedSentence = null;
 
-    return tagger.tagString(sentence);
+    return taggedSentence;
   }
 
   private int findMood(String sentence) {
@@ -105,8 +99,7 @@ public class K_Means {
     }
   }
 
-  private void InitializeUserVector() throws IOException,
-      ClassNotFoundException {
+  private void InitializeUserVector() {
 
     userVector = new Vector<>();
     Collection<User> users = model.userById(null, null);
@@ -118,8 +111,7 @@ public class K_Means {
     }
   }
 
-  private NavigableMap<String, Mood> InitializeUserInterests(Uuid user) throws IOException,
-      ClassNotFoundException {
+  private NavigableMap<String, Mood> InitializeUserInterests(Uuid user) {
 
     NavigableMap<String, Mood> interests = new TreeMap<>();
 
@@ -210,7 +202,7 @@ public class K_Means {
     }
   }
 
-  public void runClusterer(int iterations) throws IOException, ClassNotFoundException {
+  public void runClusterer(int iterations) {
     InitializeUserVector();
     InitializeClusters();
 
