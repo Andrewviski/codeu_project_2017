@@ -742,7 +742,7 @@ public final class Model {
       parameters.add(Integer.toString(cluster));
       parameters.add(SQLFormatter.sqlID(user));
       query = "UPDATE USER_CLUSTER set" +
-          " CLUSTER = ?," +
+          " CLUSTER = ?" +
           " where ID = ?" +
           ";";
 

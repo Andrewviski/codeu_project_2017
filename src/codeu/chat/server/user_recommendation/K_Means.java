@@ -40,7 +40,7 @@ public class K_Means {
 
   private String Tagger(String sentence) throws Exception{
     String taggedSentence = null;
-    InputStream inputStream = new FileInputStream("./tools/en-pos-maxent.bin");
+    InputStream inputStream = new FileInputStream("./bin/codeu/chat/server/user_recommendation/tools/en-pos-maxent.bin");
     POSModel posModel = new POSModel(inputStream);
 
     POSTaggerME tagger = new POSTaggerME(posModel);
@@ -58,7 +58,7 @@ public class K_Means {
   }
 
   private int findMood(String sentence) {
-    String command = "python tools/moodClassifier.py " + sentence;
+    String command = "python ./bin/codeu/chat/server/user_recommendation/tools/moodClassifier.py " + sentence;
 
     try {
       // run the python machine learning function using the Runtime exec method:
@@ -72,7 +72,8 @@ public class K_Means {
 
       String output;
       // read any errors from the attempted command
-      while (stdError.readLine() != null) {
+      while ((output = stdError.readLine()) != null) {
+        System.out.println(output);
         System.exit(0);
       }
 
@@ -89,6 +90,7 @@ public class K_Means {
   }
 
   private void InitializeClusters() {
+    clusterVector = new Vector<>();
     allKeyWords = new HashSet<>();
     Cluster cluster;
     int numUsers = userVector.size();
@@ -217,6 +219,7 @@ public class K_Means {
   }
 
   public boolean runClusterer(int iterations) {
+    System.out.println("Running Clusterer");
     InitializeUserVector();
     InitializeClusters();
 

@@ -16,7 +16,7 @@ from sklearn.linear_model import LogisticRegression
 def analyze_sentiment(sentence_in):
 
     # open training data csv
-    training_data = pd.read_csv("twitter_12_sentiments.csv")
+    training_data = pd.read_csv("./bin/codeu/chat/server/user_recommendation/tools/twitter_12_sentiments.csv")
     training_data['sentiment_num'] = training_data.sentiment.map({'empty': 0, 'sadness': 1, 'hate': 2,
                                                                   'anger': 3, 'neutral': 4, 'happiness': 5,
                                                                   'surprise': 6, 'boredom': 7, 'relief': 8,
@@ -44,9 +44,9 @@ def analyze_sentiment(sentence_in):
     translator_dict = {0: 'empty', 1: 'sadness', 2: 'hate', 3: 'anger', 4: 'neutral', 5: 'happiness',
                         6: 'surprise', 7: 'boredom', 8: 'relief', 9: 'enthusiasm', 10: 'love', 11: 'fun'}
 
-    print(translator_dict[int(y_pred_class)])
+    print(int(y_pred_class))
 
-    return translator_dict[int(y_pred_class)]
+    return int(y_pred_class)
 
 def main():
     sentence = sys.argv[1]
