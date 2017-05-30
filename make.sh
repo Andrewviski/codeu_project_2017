@@ -20,3 +20,6 @@ mkdir -p bin
 
 javac -Xlint $(find * | grep "\\.java$") -d ./bin -sourcepath ./src -cp ./third_party/junit4.jar:./third_party/sqlite-jdbc-3.16.1.jar:./third_party/opennlp-tools-1.8.0.jar:./third_party/opennlp-uima-1.8.0.jar:./bin
 javac -Xlint $(find * | grep "\\.java$") -d ./bin -sourcepath ./test -cp ./third_party/junit4.jar:./third_party/sqlite-jdbc-3.16.1.jar:./third_party/opennlp-tools-1.8.0.jar:./third_party/opennlp-uima-1.8.0.jar:./bin
+
+mkdir ./bin/codeu/chat/server/user_recommendation/tools
+cp -a ./src/codeu/chat/server/user_recommendation/tools/. ./bin/codeu/chat/server/user_recommendation/tools
