@@ -47,19 +47,13 @@ public final class RemoteRelay implements Relay {
     }
 
     @Override
-    public Uuid id() {
-      return id;
-    }
+    public Uuid id() { return id; }
 
     @Override
-    public Time time() {
-      return time;
-    }
+    public Time time() { return time; }
 
     @Override
-    public String text() {
-      return text;
-    }
+    public String text() { return text; }
   }
 
   private static final Serializer<Relay.Bundle.Component> COMPONENT_SERIALIZER =
@@ -98,34 +92,17 @@ public final class RemoteRelay implements Relay {
 
           return new Relay.Bundle() {
             @Override
-            public Uuid id() {
-              return id;
-            }
-
+            public Uuid id() { return id; }
             @Override
-            public Time time() {
-              return time;
-            }
-
+            public Time time() { return time; }
             @Override
-            public Uuid team() {
-              return team;
-            }
-
+            public Uuid team() { return team; }
             @Override
-            public Relay.Bundle.Component user() {
-              return user;
-            }
-
+            public Relay.Bundle.Component user() { return user; }
             @Override
-            public Relay.Bundle.Component conversation() {
-              return conversation;
-            }
-
+            public Relay.Bundle.Component conversation() { return conversation; }
             @Override
-            public Relay.Bundle.Component message() {
-              return message;
-            }
+            public Relay.Bundle.Component message() { return message; }
           };
         }
 
@@ -175,8 +152,7 @@ public final class RemoteRelay implements Relay {
         LOG.error("Server did not handle RELAY_WRITE_REQUEST");
       }
     } catch (Exception ex) {
-      LOG.error(ex, "Unexpected error when sending RELAY_WRITE_REQUEST");
-      ;
+      LOG.error(ex, "Unexpected error when sending RELAY_WRITE_REQUEST");;
     }
 
     return result;

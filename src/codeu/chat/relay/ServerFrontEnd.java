@@ -46,19 +46,11 @@ public final class ServerFrontEnd {
           // have been more work than just building an object here.
           return new Relay.Bundle.Component() {
             @Override
-            public Uuid id() {
-              return id;
-            }
-
+            public Uuid id() { return id; }
             @Override
-            public String text() {
-              return text;
-            }
-
+            public String text() { return text; }
             @Override
-            public Time time() {
-              return time;
-            }
+            public Time time() { return time; }
           };
         }
 
@@ -85,34 +77,17 @@ public final class ServerFrontEnd {
 
           return new Relay.Bundle() {
             @Override
-            public Uuid id() {
-              return id;
-            }
-
+            public Uuid id() { return id; }
             @Override
-            public Time time() {
-              return time;
-            }
-
+            public Time time() { return time; }
             @Override
-            public Uuid team() {
-              return team;
-            }
-
+            public Uuid team() { return team; }
             @Override
-            public Relay.Bundle.Component user() {
-              return user;
-            }
-
+            public Relay.Bundle.Component user() { return user; }
             @Override
-            public Relay.Bundle.Component conversation() {
-              return conversation;
-            }
-
+            public Relay.Bundle.Component conversation() { return conversation; }
             @Override
-            public Relay.Bundle.Component message() {
-              return message;
-            }
+            public Relay.Bundle.Component message() { return message; }
           };
         }
 
@@ -138,12 +113,8 @@ public final class ServerFrontEnd {
     LOG.info("Handling Connection - start");
 
     switch (Serializers.INTEGER.read(connection.in())) {
-      case NetworkCode.RELAY_READ_REQUEST:
-        handleReadMessage(connection);
-        break;
-      case NetworkCode.RELAY_WRITE_REQUEST:
-        handleWriteMessage(connection);
-        break;
+      case NetworkCode.RELAY_READ_REQUEST: handleReadMessage(connection); break;
+      case NetworkCode.RELAY_WRITE_REQUEST: handleWriteMessage(connection); break;
     }
 
     LOG.info("Handling Connection - end");

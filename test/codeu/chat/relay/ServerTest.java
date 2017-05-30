@@ -17,7 +17,6 @@ package codeu.chat.relay;
 import java.util.Collection;
 
 import static org.junit.Assert.*;
-
 import org.junit.Test;
 import org.junit.Before;
 
@@ -33,7 +32,7 @@ public final class ServerTest {
     final Server relay = new Server(8, 8);
 
     final Uuid team = new Uuid(3);
-    final byte[] secret = {0x00, 0x01, 0x02};
+    final byte[] secret = { 0x00, 0x01, 0x02 };
 
     assertTrue(relay.addTeam(team, secret));
   }
@@ -44,7 +43,7 @@ public final class ServerTest {
     final Server relay = new Server(8, 8);
 
     final Uuid team = new Uuid(3);
-    final byte[] secret = {0x00, 0x01, 0x02};
+    final byte[] secret = { 0x00, 0x01, 0x02 };
 
     assertTrue(relay.addTeam(team, secret));
 
@@ -61,7 +60,7 @@ public final class ServerTest {
     final Server relay = new Server(8, 8);
 
     final Uuid team = new Uuid(3);
-    final byte[] secret = {0x00, 0x01, 0x02};
+    final byte[] secret = { 0x00, 0x01, 0x02 };
 
     assertFalse(relay.write(team,
         secret,
@@ -76,8 +75,8 @@ public final class ServerTest {
     final Server relay = new Server(8, 8);
 
     final Uuid team = new Uuid(3);
-    final byte[] secret = {0x00, 0x01, 0x02};
-    final byte[] wrongSecret = {0x00, 0x01, 0x03};
+    final byte[] secret = { 0x00, 0x01, 0x02 };
+    final byte[] wrongSecret = { 0x00, 0x01, 0x03 };
 
     assertTrue(relay.addTeam(team, secret));
 
@@ -94,7 +93,7 @@ public final class ServerTest {
     final Server relay = new Server(8, 8);
 
     final Uuid team = new Uuid(3);
-    final byte[] secret = {0x00, 0x01, 0x02};
+    final byte[] secret = { 0x00, 0x01, 0x02 };
 
     assertTrue(relay.addTeam(team, secret));
 
@@ -124,8 +123,8 @@ public final class ServerTest {
     final Server relay = new Server(8, 8);
 
     final Uuid team = new Uuid(3);
-    final byte[] secret = {0x00, 0x01, 0x02};
-    final byte[] wrongSecret = {0x00, 0x01, 0x00};
+    final byte[] secret = { 0x00, 0x01, 0x02 };
+    final byte[] wrongSecret = { 0x00, 0x01, 0x00 };
 
     assertTrue(relay.addTeam(team, secret));
 
@@ -142,7 +141,7 @@ public final class ServerTest {
     final Server relay = new Server(8, 8);
 
     final Uuid team = new Uuid(3);
-    final byte[] secret = {0x00, 0x01, 0x02};
+    final byte[] secret = { 0x00, 0x01, 0x02 };
 
     assertTrue(relay.addTeam(team, secret));
 
@@ -159,7 +158,7 @@ public final class ServerTest {
     final Server relay = new Server(8, 1);
 
     final Uuid team = new Uuid(3);
-    final byte[] secret = {0x00, 0x01, 0x02};
+    final byte[] secret = { 0x00, 0x01, 0x02 };
 
     assertTrue(relay.addTeam(team, secret));
 
@@ -186,7 +185,7 @@ public final class ServerTest {
     final Server relay = new Server(1, 8);
 
     final Uuid team = new Uuid(3);
-    final byte[] secret = {0x00, 0x01, 0x02};
+    final byte[] secret = { 0x00, 0x01, 0x02 };
 
     assertTrue(relay.addTeam(team, secret));
 
@@ -222,7 +221,7 @@ public final class ServerTest {
     final Server relay = new Server(8, 8);
 
     final Uuid team = new Uuid(3);
-    final byte[] secret = {0x00, 0x01, 0x02};
+    final byte[] secret = { 0x00, 0x01, 0x02 };
 
     assertTrue(relay.addTeam(team, secret));
 
@@ -252,7 +251,7 @@ public final class ServerTest {
     final Server relay = new Server(8, 8);
 
     final Uuid team = new Uuid(3);
-    final byte[] secret = {0x00, 0x01, 0x02};
+    final byte[] secret = { 0x00, 0x01, 0x02 };
 
     assertTrue(relay.addTeam(team, secret));
 

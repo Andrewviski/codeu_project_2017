@@ -112,9 +112,7 @@ public final class Uuid {
   }
 
   @Override
-  public int hashCode() {
-    return hash(this);
-  }
+  public int hashCode() { return hash(this); }
 
   @Override
   public String toString() {
@@ -189,6 +187,7 @@ public final class Uuid {
   }
 
   private static Uuid parse(final Uuid root, String[] tokens, int index) throws IOException {
+
     final long id = Long.parseLong(tokens[index]);
 
     if ((id >> 32) != 0) {
@@ -197,7 +196,7 @@ public final class Uuid {
           tokens[index]));
     }
 
-    final Uuid link = new Uuid(root, (int) (id & 0xFFFFFFFF));
+    final Uuid link = new Uuid(root, (int)(id & 0xFFFFFFFF));
 
     final int nextIndex = index + 1;
 

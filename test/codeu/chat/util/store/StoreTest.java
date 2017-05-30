@@ -17,7 +17,6 @@ package codeu.chat.util.store;
 import java.util.Comparator;
 
 import static org.junit.Assert.*;
-
 import org.junit.Test;
 import org.junit.Before;
 
@@ -25,9 +24,7 @@ public final class StoreTest {
 
   private static final Comparator<Integer> COMPARATOR = new Comparator<Integer>() {
     @Override
-    public int compare(Integer a, Integer b) {
-      return a.compareTo(b);
-    }
+    public int compare(Integer a, Integer b) { return a.compareTo(b); }
   };
 
   private Store<Integer, Integer> store;
@@ -46,7 +43,7 @@ public final class StoreTest {
     store.insert(3, 30);
     store.insert(4, 40);
 
-    final int[] order = {0, 10, 20, 30, 40};
+    final int[] order = { 0, 10, 20, 30, 40 };
     assertOrder(store.all(), order);
   }
 
@@ -59,7 +56,7 @@ public final class StoreTest {
     store.insert(1, 10);
     store.insert(0, 0);
 
-    final int[] order = {0, 10, 20, 30, 40};
+    final int[] order = { 0, 10, 20, 30, 40 };
     assertOrder(store.all(), order);
   }
 
@@ -72,7 +69,7 @@ public final class StoreTest {
     store.insert(3, 30);
     store.insert(2, 20);
 
-    final int[] order = {0, 10, 20, 30, 40};
+    final int[] order = { 0, 10, 20, 30, 40 };
     assertOrder(store.all(), order);
   }
 
@@ -84,7 +81,7 @@ public final class StoreTest {
     store.insert(3, 30);
     store.insert(4, 40);
 
-    final int[] order = {0, 10, 20};
+    final int[] order = { 0, 10, 20 };
     assertOrder(store.before(2), order);
   }
 
@@ -96,7 +93,7 @@ public final class StoreTest {
     store.insert(3, 30);
     store.insert(4, 40);
 
-    final int[] order = {20, 30, 40};
+    final int[] order = { 20, 30, 40 };
     assertOrder(store.after(2), order);
   }
 
@@ -108,7 +105,7 @@ public final class StoreTest {
     store.insert(3, 30);
     store.insert(4, 40);
 
-    final int[] order = {10, 20, 30};
+    final int[] order = { 10, 20, 30 };
     assertOrder(store.range(1, 3), order);
   }
 
@@ -122,7 +119,7 @@ public final class StoreTest {
     store.insert(3, 30);
     store.insert(4, 40);
 
-    final int[] order = {20, 21, 22};
+    final int[] order = { 20, 21, 22 };
     assertOrder(store.at(2), order);
   }
 

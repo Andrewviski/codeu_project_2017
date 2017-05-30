@@ -28,7 +28,7 @@ final class SimpleGuiClientMain {
 
   private static final Logger.Log LOG = Logger.newLog(SimpleGuiClientMain.class);
 
-  public static void main(String[] args) {
+  public static void main(String [] args) {
 
     try {
       Logger.enableFileOutput("chat_simple_gui_client_log.log");

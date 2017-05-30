@@ -28,7 +28,6 @@ public final class Logger {
     void warning(String message, Object... params);
 
     void error(String message, Object... params);
-
     void error(Throwable error, String message, Object... params);
 
   }
