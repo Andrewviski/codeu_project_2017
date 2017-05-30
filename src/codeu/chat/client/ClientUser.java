@@ -162,4 +162,15 @@ public final class ClientUser {
   public static void printUser(User user) {
     System.out.println(getUserInfoString(user));
   }
+
+  //Only the ADMIN should be able to run this function
+  public boolean generateClusters(int iterations) {
+    return controller.generateUserClusters(iterations);
+  }
+
+  public void getRecommendedUsers() {
+    for (User user : view.getRecommendedUsers(current.id)) {
+      printUser(user);
+    }
+  }
 }

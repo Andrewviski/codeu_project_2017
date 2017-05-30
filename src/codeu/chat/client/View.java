@@ -24,10 +24,7 @@ import codeu.chat.common.LogicalView;
 import codeu.chat.common.Message;
 import codeu.chat.common.NetworkCode;
 import codeu.chat.common.User;
-import codeu.chat.util.Logger;
-import codeu.chat.util.Serializers;
-import codeu.chat.util.Time;
-import codeu.chat.util.Uuid;
+import codeu.chat.util.*;
 import codeu.chat.util.connections.Connection;
 import codeu.chat.util.connections.ConnectionSource;
 
@@ -279,5 +276,28 @@ public final class View implements BasicView, LogicalView {
     }
 
     return messages;
+  }
+
+  public Collection<User> getRecommendedUsers(Uuid user) {
+
+    final Collection<User> recommendedUsers = new ArrayList<>();
+
+    try (final Connection connection = source.connect()) {
+
+      Serializers.INTEGER.write(connection.out(),NetworkCode.GET_RECOMMENDED_USERS_REQUEST);
+      Uuid.SERIALIZER.write(connection.out(), user);
+
+      if(Serializers.INTEGER.read(connection.in()) == NetworkCode.GET_RECOMMENDED_USERS_RESPONSE) {
+        recommendedUsers.addAll(Serializers.collection(User.SERIALIZER).read(connection.in()));
+      } else {
+        LOG.error("Response from server failed.");
+      }
+
+    } catch (Exception ex) {
+      System.out.println("ERROR: Exception during call on server. Check log for details.");
+      LOG.error(ex, "Exception during call on server.");
+    }
+
+    return recommendedUsers;
   }
 }

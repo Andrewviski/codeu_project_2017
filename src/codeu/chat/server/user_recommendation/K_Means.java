@@ -14,6 +14,11 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.*;
 
+import opennlp.tools.postag.POSModel;
+import opennlp.tools.postag.POSSample;
+import opennlp.tools.postag.POSTaggerME;
+import opennlp.tools.tokenize.WhitespaceTokenizer;
+
 import javax.swing.text.html.HTMLDocument;
 
 /**
@@ -33,15 +38,27 @@ public class K_Means {
     //Set the Model File to a correct location after build
   }
 
-  private String Tagger(String sentence) {
+  private String Tagger(String sentence) throws Exception{
     String taggedSentence = null;
+    InputStream inputStream = new FileInputStream("./tools/en-pos-maxent.bin");
+    POSModel posModel = new POSModel(inputStream);
+
+    POSTaggerME tagger = new POSTaggerME(posModel);
+
+    WhitespaceTokenizer whitespaceTokenizer = WhitespaceTokenizer.INSTANCE;
+    String[] tokens = whitespaceTokenizer.tokenize(sentence);
+
+    String[] tags = tagger.tag(tokens);
+
+    POSSample sample = new POSSample(tokens, tags);
+
+    taggedSentence = sample.toString();
 
     return taggedSentence;
   }
 
   private int findMood(String sentence) {
-    String command = "python model/main.py " + sentence;
-    int moodIdx = -1;
+    String command = "python tools/moodClassifier.py " + sentence;
 
     try {
       // run the python machine learning function using the Runtime exec method:
@@ -102,7 +119,7 @@ public class K_Means {
   private void InitializeUserVector() {
 
     userVector = new Vector<>();
-    Collection<User> users = model.userById(null, null);
+    Collection<User> users = model.getAllUsers(Uuid.NULL);
 
     for (User user : users) {
       UserFeatures features = new UserFeatures(user.id);
@@ -115,39 +132,36 @@ public class K_Means {
 
     NavigableMap<String, Mood> interests = new TreeMap<>();
 
-    Collection<Message> messages = model.messageByTime("USERID = " + SQLFormatter.sqlID(user), "ASC");
+    Collection<Message> messages = model.getUserMessages(user);
 
     for (Message message : messages) {
       //Assign value with Austin's Algorithm based on message.content
       Mood mood = new Mood(findMood(message.content));
       boolean validWord;
-      String taggedMessage = Tagger(message.content);
+      try {
+        String taggedMessage = Tagger(message.content);
+        for (String word : taggedMessage.split("\\s+")) {
+          validWord = false;
+          if (word.contains("_NN")) {
+            word.replace("_NN", "");
+            validWord = true;
+          } else if (word.contains("_NNP")) {
+            word.replace("_NNP", "");
+            validWord = true;
+          }
 
-      for (String word : taggedMessage.split("\\s+")) {
-        validWord = false;
-        if (word.contains("/NN")) {
-          word.replace("/NN", "");
-          validWord = true;
-        } else if (word.contains("/NNS")) {
-          word.replace("/NNS", "");
-          validWord = true;
-        } else if (word.contains("/NNP")) {
-          word.replace("/NNP", "");
-          validWord = true;
-        } else if (word.contains("/NNPS")) {
-          word.replace("/NNPS", "");
-          validWord = true;
-        }
-
-        if (validWord) {
-          if (interests.get(word) == null) {
-            interests.put(word, mood);
-          } else {
-            Mood temp = interests.get(word);
-            temp.add(mood);
-            interests.put(word, mood);
+          if (validWord) {
+            if (interests.get(word) == null) {
+              interests.put(word, mood);
+            } else {
+              Mood temp = interests.get(word);
+              temp.add(mood);
+              interests.put(word, mood);
+            }
           }
         }
+      } catch (Exception e) {
+        System.out.println("Error Running the tagger");
       }
     }
     return interests;
@@ -202,7 +216,7 @@ public class K_Means {
     }
   }
 
-  public void runClusterer(int iterations) {
+  public boolean runClusterer(int iterations) {
     InitializeUserVector();
     InitializeClusters();
 
@@ -211,7 +225,10 @@ public class K_Means {
       moveCentroids();
     }
 
-    //Store the Clusters in the Database for access
+    for(UserFeatures userFeatures : userVector) {
+      model.update(userFeatures.userID, userFeatures.cluster);
+    }
 
+    return true;
   }
 }

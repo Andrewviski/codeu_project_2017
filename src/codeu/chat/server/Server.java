@@ -24,13 +24,9 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import codeu.chat.common.*;
-import codeu.chat.server.user_recommendation.K_Means;
-import codeu.chat.util.Logger;
-import codeu.chat.util.Serializers;
-import codeu.chat.util.Time;
-import codeu.chat.util.Timeline;
-import codeu.chat.util.Uuid;
+import codeu.chat.util.*;
 import codeu.chat.util.connections.Connection;
+import codeu.chat.server.user_recommendation.K_Means;
 
 public final class Server {
 
@@ -47,7 +43,7 @@ public final class Server {
   private final View view = new View(model);
   private final Controller controller;
 
-  private final K_Means clusterer;
+  private final K_Means k_means;
 
   private final Relay relay;
   private Uuid lastSeen = Uuid.NULL;
@@ -60,8 +56,7 @@ public final class Server {
     this.controller = new Controller(id, model);
     this.relay = relay;
 
-    //Add a Serializer entry to run the clusterer with a Client Entry
-    this.clusterer = new K_Means(model);
+    this.k_means = new K_Means(model);
 
     timeline.scheduleNow(new Runnable() {
       @Override
@@ -242,6 +237,24 @@ public final class Server {
       Serializers.INTEGER.write(out, NetworkCode.GET_MESSAGES_BY_RANGE_RESPONSE);
       Serializers.collection(Message.SERIALIZER).write(out, messages);
 
+    } else if(type == NetworkCode.GENERATE_USER_CLUSTERS_REQUEST) {
+
+      final int iterations = Serializers.INTEGER.read(in);
+
+      boolean success = k_means.runClusterer(iterations);
+
+      Serializers.INTEGER.write(out, NetworkCode.GENERATE_USER_CLUSTERS_RESPONSE);
+      Serializers.BOOLEAN.write(out, success);
+
+    } else if(type == NetworkCode.GET_RECOMMENDED_USERS_REQUEST) {
+
+      final Uuid user = Uuid.SERIALIZER.read(in);
+
+      Collection<User> recommendedUsers = view.getRecommendedUsers(user);
+
+      Serializers.INTEGER.write(out, NetworkCode.GET_RECOMMENDED_USERS_RESPONSE);
+      Serializers.collection(User.SERIALIZER).write(out, recommendedUsers);
+
     } else {
 
       // In the case that the message was not handled make a dummy message with
@@ -262,13 +275,13 @@ public final class Server {
 
     String password = "Temporal Password for Relay";
 
-    User user = model.userById("ID = " + SQLFormatter.sqlID(relayUser.id()), null).iterator().next();
+    User user = model.getSingleUser(relayUser.id());
 
     if (user == null) {
       user = controller.newUser(relayUser.id(), relayUser.text(), relayUser.time(), password);
     }
 
-    Conversation conversation = model.conversationById("ID = " + SQLFormatter.sqlID(relayConversation.id()), null).iterator().next();
+    Conversation conversation = model.getSingleConversation(relayConversation.id());
 
     if (conversation == null) {
 
@@ -281,7 +294,7 @@ public final class Server {
           relayConversation.time());
     }
 
-    Message message = model.messageById("ID = " + relayMessage.id().toString(), null).iterator().next();
+    Message message = model.getSingleMessage(relayMessage.id());
 
     if (message == null) {
       message = controller.newMessage(relayMessage.id(),

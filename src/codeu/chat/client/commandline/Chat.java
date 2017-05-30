@@ -205,7 +205,27 @@ public final class Chat {
         clientContext.message.showMessages(count);
       }
 
-    } else {
+    } else if (token.equals("generate-clusters")) {
+
+      // Only the ADMIN should be able to run this command
+      if (!tokenScanner.hasNext()) {
+        System.out.println("ERROR: Iterations not specified.");
+      } else {
+        int iterations = Integer.parseInt(tokenScanner.next().trim());
+        if(!clientContext.user.generateClusters(iterations)) {
+          System.out.println("ERROR: Clusters not generated.");
+        }
+      }
+
+    } else if (token.equals("show-recommended-users")) {
+
+      if(!clientContext.user.hasCurrent()) {
+        System.out.println("ERROR: No user selected.");
+      } else {
+        clientContext.user.getRecommendedUsers();
+      }
+
+    }else {
 
       System.out.format("Command not recognized: %s\n", token);
       System.out.format("Command line rejected: %s%s\n", token,

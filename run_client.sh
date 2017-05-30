@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 if [[ "$1" == 'test' ]]; then
-    java -cp ./third_party/sqlite-jdbc-3.16.1.jar:./bin codeu.chat.ClientMain "localhost@2222"
+    java -cp ./third_party/sqlite-jdbc-3.16.1.jar:./third_party/opennlp-tools-1.8.0.jar:./third_party/opennlp-uima-1.8.0.jar:./bin codeu.chat.ClientMain "localhost@2222"
 else
 
     HOST="$1"
@@ -25,5 +25,5 @@ else
       exit 1
     fi
 
-    java -cp ./third_party/sqlite-jdbc-3.16.1.jar:./bin codeu.chat.ClientMain "$HOST@$PORT"
+    java -cp ./third_party/sqlite-jdbc-3.16.1.jar:./third_party/opennlp-tools-1.8.0.jar:./third_party/opennlp-uima-1.8.0.jar:./bin codeu.chat.ClientMain "$HOST@$PORT"
 fi
