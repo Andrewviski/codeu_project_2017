@@ -112,7 +112,9 @@ public final class Uuid {
   }
 
   @Override
-  public int hashCode() { return hash(this); }
+  public int hashCode() {
+    return hash(this);
+  }
 
   @Override
   public String toString() {
@@ -195,7 +197,7 @@ public final class Uuid {
           tokens[index]));
     }
 
-    final Uuid link = new Uuid(root, (int)(id & 0xFFFFFFFF));
+    final Uuid link = new Uuid(root, (int) (id & 0xFFFFFFFF));
 
     final int nextIndex = index + 1;
 

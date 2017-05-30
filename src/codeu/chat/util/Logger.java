@@ -28,6 +28,7 @@ public final class Logger {
     void warning(String message, Object... params);
 
     void error(String message, Object... params);
+
     void error(Throwable error, String message, Object... params);
 
   }
@@ -88,25 +89,25 @@ public final class Logger {
       @Override
       public void warning(String message, Object... params) {
         log.logp(java.util.logging.Level.WARNING,
-                 Thread.currentThread().getStackTrace()[2].getClassName(),
-                 Thread.currentThread().getStackTrace()[2].getMethodName(),
-                 String.format(message, params));
+            Thread.currentThread().getStackTrace()[2].getClassName(),
+            Thread.currentThread().getStackTrace()[2].getMethodName(),
+            String.format(message, params));
       }
 
       @Override
       public void error(String message, Object... params) {
         log.logp(java.util.logging.Level.SEVERE,
-                 Thread.currentThread().getStackTrace()[2].getClassName(),
-                 Thread.currentThread().getStackTrace()[2].getMethodName(),
-                 String.format(message, params));
+            Thread.currentThread().getStackTrace()[2].getClassName(),
+            Thread.currentThread().getStackTrace()[2].getMethodName(),
+            String.format(message, params));
       }
 
       @Override
       public void error(Throwable error, String message, Object... params) {
         log.logp(java.util.logging.Level.SEVERE,
-                 Thread.currentThread().getStackTrace()[2].getClassName(),
-                 Thread.currentThread().getStackTrace()[2].getMethodName(),
-                 String.format(message, params), error);
+            Thread.currentThread().getStackTrace()[2].getClassName(),
+            Thread.currentThread().getStackTrace()[2].getMethodName(),
+            String.format(message, params), error);
       }
     };
   }

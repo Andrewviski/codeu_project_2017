@@ -35,13 +35,19 @@ public final class NoOpRelay implements Relay {
 
     return new Relay.Bundle.Component() {
       @Override
-      public Uuid id() { return id; }
+      public Uuid id() {
+        return id;
+      }
 
       @Override
-      public Time time() { return time; }
+      public Time time() {
+        return time;
+      }
 
       @Override
-      public String text() { return text; }
+      public String text() {
+        return text;
+      }
     };
   }
 

@@ -138,12 +138,12 @@ public final class View implements BasicView, LogicalView, SinglesView {
     boolean foundRoot = false;
     int countMessages = 0;
 
-    for(Iterator<Message> iterator = allMessages.iterator(); iterator.hasNext() && countMessages <= remaining;) {
+    for (Iterator<Message> iterator = allMessages.iterator(); iterator.hasNext() && countMessages <= remaining; ) {
       current = iterator.next();
-      if(current.id.equals(rootMessage)) {
+      if (current.id.equals(rootMessage)) {
         foundRoot = true;
       }
-      if(foundRoot) {
+      if (foundRoot) {
         if (range > 0) {
           found.addLast(current);
         } else {
@@ -156,13 +156,19 @@ public final class View implements BasicView, LogicalView, SinglesView {
   }
 
   @Override
-  public User findUser(Uuid id) { return model.userById("ID = " + SQLFormatter.sqlID(id), null).iterator().next(); }
+  public User findUser(Uuid id) {
+    return model.userById("ID = " + SQLFormatter.sqlID(id), null).iterator().next();
+  }
 
   @Override
-  public Conversation findConversation(Uuid id) { return model.conversationById("ID = " + SQLFormatter.sqlID(id), null).iterator().next(); }
+  public Conversation findConversation(Uuid id) {
+    return model.conversationById("ID = " + SQLFormatter.sqlID(id), null).iterator().next();
+  }
 
   @Override
-  public Message findMessage(Uuid id) { return model.messageById("ID = " + SQLFormatter.sqlID(id), null).iterator().next(); }
+  public Message findMessage(Uuid id) {
+    return model.messageById("ID = " + SQLFormatter.sqlID(id), null).iterator().next();
+  }
 
   private static String intersect(Collection<Uuid> ids, boolean isBlacklist) {
 
@@ -172,23 +178,22 @@ public final class View implements BasicView, LogicalView, SinglesView {
     String found = null;
     String operator = null;
 
-    if(ids.isEmpty()) {
+    if (ids.isEmpty()) {
       return found;
     }
 
     found = "";
 
-    if(!isBlacklist) {
+    if (!isBlacklist) {
       operator = "=";
-    }
-    else {
+    } else {
       operator = "<>";
     }
 
-    for (Iterator<Uuid> id = ids.iterator(); id.hasNext();) {
+    for (Iterator<Uuid> id = ids.iterator(); id.hasNext(); ) {
       Uuid nextID = id.next();
       found += "ID " + operator + " " + SQLFormatter.sqlID(nextID);
-      if(id.hasNext()) {
+      if (id.hasNext()) {
         found += " OR ";
       }
     }

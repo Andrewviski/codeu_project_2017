@@ -52,7 +52,7 @@ public final class Server {
   private final Relay relay;
   private Uuid lastSeen = Uuid.NULL;
 
-  public Server(final Uuid id, final byte[] secret, final Relay relay) throws IOException, ClassNotFoundException{
+  public Server(final Uuid id, final byte[] secret, final Relay relay) throws IOException, ClassNotFoundException {
 
     this.id = id;
     this.secret = Arrays.copyOf(secret, secret.length);
@@ -276,19 +276,19 @@ public final class Server {
       // has a message in the conversation will get ownership over this server's copy
       // of the conversation.
       conversation = controller.newConversation(relayConversation.id(),
-                                                relayConversation.text(),
-                                                user.id,
-                                                relayConversation.time());
+          relayConversation.text(),
+          user.id,
+          relayConversation.time());
     }
 
     Message message = model.messageById("ID = " + relayMessage.id().toString(), null).iterator().next();
 
     if (message == null) {
       message = controller.newMessage(relayMessage.id(),
-                                      user.id,
-                                      conversation.id,
-                                      relayMessage.text(),
-                                      relayMessage.time());
+          user.id,
+          conversation.id,
+          relayMessage.text(),
+          relayMessage.time());
     }
   }
 
@@ -302,10 +302,10 @@ public final class Server {
         final Conversation conversation = view.findConversation(conversationId);
         final Message message = view.findMessage(messageId);
         relay.write(id,
-                    secret,
-                    relay.pack(user.id, user.name, user.creation),
-                    relay.pack(conversation.id, conversation.title, conversation.creation),
-                    relay.pack(message.id, message.content, message.creation));
+            secret,
+            relay.pack(user.id, user.name, user.creation),
+            relay.pack(conversation.id, conversation.title, conversation.creation),
+            relay.pack(message.id, message.content, message.creation));
       }
     };
   }

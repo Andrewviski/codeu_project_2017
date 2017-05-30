@@ -28,7 +28,7 @@ final class SimpleGuiClientMain {
 
   private static final Logger.Log LOG = Logger.newLog(SimpleGuiClientMain.class);
 
-  public static void main(String [] args) {
+  public static void main(String[] args) {
 
     try {
       Logger.enableFileOutput("chat_simple_gui_client_log.log");
@@ -45,7 +45,7 @@ final class SimpleGuiClientMain {
     final RemoteAddress address = RemoteAddress.parse(args[0]);
 
     try (
-      final ConnectionSource source = new ClientConnectionSource(address.host, address.port)
+        final ConnectionSource source = new ClientConnectionSource(address.host, address.port)
     ) {
       final Controller controller = new Controller(source);
       final View view = new View(source);
