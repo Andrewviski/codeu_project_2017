@@ -64,6 +64,9 @@ public final class Chat {
     System.out.println("   m-list-all       - list all messages in the current conversation.");
     System.out.println("   m-next <index>   - index of next message to view.");
     System.out.println("   m-show <count>   - show next <count> messages.");
+    System.out.println("Clustering Commands:");
+    System.out.println("   k-generate-clusters <iterations>     - run the user clustering algorithm [ADMIN ONLY].");
+    System.out.println("   k-show-recommended-users             - show current user's recommended users (if any).");
   }
 
   // Prompt for new command.
@@ -205,7 +208,7 @@ public final class Chat {
         clientContext.message.showMessages(count);
       }
 
-    } else if (token.equals("generate-clusters")) {
+    } else if (token.equals("k-generate-clusters")) {
 
       // Only the ADMIN should be able to run this command
       if (!tokenScanner.hasNext()) {
@@ -217,7 +220,7 @@ public final class Chat {
         }
       }
 
-    } else if (token.equals("show-recommended-users")) {
+    } else if (token.equals("k-show-recommended-users")) {
 
       if(!clientContext.user.hasCurrent()) {
         System.out.println("ERROR: No user selected.");

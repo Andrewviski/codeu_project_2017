@@ -46,6 +46,6 @@ public class moodClassifier {
     double[] result = categorizer.categorize(sentence);
     System.out.println("RESULT: " + categorizer.getBestCategory(result));
 
-    return categorizer.categorize(sentence);
+    return result;
   }
 }
