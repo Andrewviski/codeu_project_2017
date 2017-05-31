@@ -15,13 +15,10 @@ public class Mood {
     }
   }
 
-  public Mood(int mood) {
+  public Mood(double[] mood) {
     for (int i = 0; i < 12; i++) {
-      moods[i] = 0;
+      moods[i] = mood[i];
     }
-
-    if (mood >= 0 && mood <= 12)
-      moods[mood] = 1;
   }
 
   public void setMood(int mood, double value) {
@@ -37,6 +34,9 @@ public class Mood {
   }
 
   public void add(Mood mood) {
+    if(mood == null)
+      return;
+
     for (int i = 0; i < 12; i++) {
       moods[i] += mood.getMood(i);
     }

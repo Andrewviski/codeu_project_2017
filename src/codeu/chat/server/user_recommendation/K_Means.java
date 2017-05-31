@@ -7,6 +7,7 @@ import codeu.chat.util.Uuid;
 import codeu.chat.server.user_recommendation.UserFeatures;
 import codeu.chat.server.user_recommendation.Cluster;
 import codeu.chat.server.user_recommendation.Mood;
+import codeu.chat.server.user_recommendation.moodClassifier;
 import codeu.chat.server.Model;
 
 import java.io.*;
@@ -31,10 +32,12 @@ public class K_Means {
   private Collection<String> allKeyWords;
 
   private final Model model;
+  private moodClassifier classifier;
 
   public K_Means(Model model) {
 
     this.model = model;
+    this.classifier = new moodClassifier();
     //Set the Model File to a correct location after build
   }
 
@@ -55,38 +58,6 @@ public class K_Means {
     taggedSentence = sample.toString();
 
     return taggedSentence;
-  }
-
-  private int findMood(String sentence) {
-    String command = "python ./bin/codeu/chat/server/user_recommendation/tools/moodClassifier.py " + sentence;
-
-    try {
-      // run the python machine learning function using the Runtime exec method:
-      Process p = Runtime.getRuntime().exec(command);
-
-      BufferedReader stdInput = new BufferedReader(new
-          InputStreamReader(p.getInputStream()));
-
-      BufferedReader stdError = new BufferedReader(new
-          InputStreamReader(p.getErrorStream()));
-
-      String output;
-      // read any errors from the attempted command
-      while ((output = stdError.readLine()) != null) {
-        System.out.println(output);
-        System.exit(0);
-      }
-
-      // return the output from the program
-      output = stdInput.readLine();
-      return Integer.parseInt(output);
-
-    } catch (IOException e) {
-      System.out.println("Exception:");
-      e.printStackTrace();
-      System.exit(-1);
-      return -1;
-    }
   }
 
   private void InitializeClusters() {
@@ -138,7 +109,7 @@ public class K_Means {
 
     for (Message message : messages) {
       //Assign value with Austin's Algorithm based on message.content
-      Mood mood = new Mood(findMood(message.content));
+      Mood mood = new Mood(classifier.classifyTweet(message.content.split("\\s+")));
       boolean validWord;
       try {
         String taggedMessage = Tagger(message.content);
@@ -220,6 +191,7 @@ public class K_Means {
 
   public boolean runClusterer(int iterations) {
     System.out.println("Running Clusterer");
+    classifier.trainModel();
     InitializeUserVector();
     InitializeClusters();
 
