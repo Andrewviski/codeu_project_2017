@@ -31,7 +31,6 @@ import javax.swing.plaf.nimbus.State;
 import java.sql.*;
 import java.util.Date;
 import java.text.SimpleDateFormat;
-import java.util.HashSet;
 
 import codeu.chat.common.SQLFormatter;
 
@@ -46,9 +45,8 @@ public final class Controller implements RawController, BasicController {
   public Controller(Uuid serverId, Model model) {
     this.model = model;
     this.uuidGenerator = new RandomUuidGenerator(serverId, System.currentTimeMillis());
-    newUser("Admin", "admin");
-    if (this.model.userByText().at("Admin") == null)
-      this.model.add(newUser(createId(), "Admin", Time.now(), "admin"));
+    if (this.model.getAdmin() == null)
+      this.model.add(new User(createId(), "Admin", Time.now(), "admin"));
   }
 
   @Override
@@ -66,46 +64,20 @@ public final class Controller implements RawController, BasicController {
     return newConversation(createId(), title, owner, Time.now());
   }
 
-  private void executeUpdate(Connection connection, String sql) {
-    try {
-      Statement stmt = connection.createStatement();
-      stmt.executeUpdate(sql);
-      stmt.close();
-      connection.commit();
-    } catch (Exception e) {
-      System.out.println("Error adding message to conversation");
-      System.err.println(e.getClass().getName() + ": " + e.getMessage());
-      System.exit(0);
-    }
-  }
-
   @Override
   public Message newMessage(Uuid id, Uuid author, Uuid conversation, String body, Time creationTime) {
 
-    final User foundUser = model.userById().first(author);
-    final Conversation foundConversation = model.conversationById().first(conversation);
-
-    Collection<Message> prevMessages = model.messageById("MNEXTID IS NULL AND CONVERSATIONID = " + SQLFormatter.sqlID(conversation), null);
+    Message prevMessage = model.getLastMessage(conversation);
 
     Message message = null;
-    Message prevMessage = null;
-    Message updatePrevMessage = null;
 
-    String prevMsgID = "";
-
-    if (!prevMessages.isEmpty()) {
-      prevMessage = prevMessages.iterator().next();
-      updatePrevMessage = new Message(prevMessage.id, id, prevMessage.previous, prevMessage.creation, prevMessage.author, prevMessage.content);
-      prevMsgID = prevMessage.id.toString();
-    }
-
-    if (!prevMsgID.equals("")) {
-      model.update(updatePrevMessage);
-      message = new Message(id, null, prevMessage.id, creationTime, author, body);
+    if (prevMessage != null) {
+      prevMessage.next = id;
+      model.update(prevMessage);
+      message = new Message(id, Uuid.NULL, prevMessage.id, creationTime, author, body);
       model.add(message, conversation);
     } else {
-      System.out.println("Expected Path");
-      message = new Message(id, null, null, creationTime, author, body);
+      message = new Message(id, Uuid.NULL, Uuid.NULL, creationTime, author, body);
       model.add(message, conversation);
     }
     return message;
@@ -122,27 +94,21 @@ public final class Controller implements RawController, BasicController {
       model.add(user);
 
       LOG.info(
-              "newUser success (user.id=%s user.name=%s user.time=%s)",
-              id,
-              name,
-              creationTime);
+          "newUser success (user.id=%s user.name=%s user.time=%s)",
+          id,
+          name,
+          creationTime);
 
     } else {
 
       LOG.info(
-              "newUser fail - id in use (user.id=%s user.name=%s user.time=%s)",
-              id,
-              name,
-              creationTime);
+          "newUser fail - id in use (user.id=%s user.name=%s user.time=%s)",
+          id,
+          name,
+          creationTime);
     }
 
     return user;
-  }
-
-
-  public boolean addUserToConversation(Conversation conversation,User user) {
-    return model.addUserToConversation(conversation,user);
-
   }
 
   @Override
@@ -160,15 +126,33 @@ public final class Controller implements RawController, BasicController {
     return conversation;
   }
 
+  public boolean addUserToConversation(Uuid issuerID, Uuid userID, Uuid conversationID) {
+    boolean response;
+
+    //Check if Issuer is not trying to add Himself
+    if (!issuerID.equals(userID)) {
+      Conversation conversation = model.getSingleConversation(conversationID);
+      //Check if conversation exists and Issuer is owner
+      if (conversation != null && conversation.owner.equals(issuerID)) {
+        response = model.addUserToConversation(conversationID, userID);
+      }
+      else {
+        response = false;
+      }
+    }
+    else {
+      response = false;
+    }
+
+    return response;
+  }
+
   private Uuid createId() {
 
     Uuid candidate;
-    System.out.println("Not Looping");
     for (candidate = uuidGenerator.make();
          isIdInUse(candidate);
          candidate = uuidGenerator.make()) {
-
-      System.out.println(candidate.toString());
 
       // Assuming that "randomUuid" is actually well implemented, this
       // loop should never be needed, but just incase make sure that the
@@ -180,17 +164,12 @@ public final class Controller implements RawController, BasicController {
   }
 
   private boolean isIdInUse(Uuid id) {
-    System.out.println("isIdInUse");
-    System.out.println(!model.messageById("ID = " + SQLFormatter.sqlID(id), null).isEmpty() ||
-            model.conversationById().first(id) != null ||
-            model.userById().first(id) != null);
-    return !model.messageById("ID = " + SQLFormatter.sqlID(id), null).isEmpty() ||
-            model.conversationById().first(id) != null ||
-            model.userById().first(id) != null;
+    return model.getSingleUser(id) != null ||
+        model.getSingleConversation(id) != null ||
+        model.getSingleMessage(id) != null;
   }
 
   private boolean isIdFree(Uuid id) {
-    System.out.println("isIdFree");
     return !isIdInUse(id);
   }
 

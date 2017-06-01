@@ -50,8 +50,8 @@ public final class MessagePanel extends JPanel {
         clientContext.user.lookup(owningConversation.owner);
 
     messageOwnerLabel.setText("Owner: " +
-        ((u==null) ?
-            ((owningConversation==null) ? "" : owningConversation.owner) :
+        ((u == null) ?
+            ((owningConversation == null) ? "" : owningConversation.owner) :
             u.name));
 
     messageConversationLabel.setText("Conversation: " + owningConversation.title);
