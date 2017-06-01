@@ -94,6 +94,21 @@ public final class View implements BasicView, LogicalView, SinglesView {
       System.exit(0);
     }
 
+    return summaries;*/
+
+    final Collection<ConversationSummary> summaries = new ArrayList<>();
+
+    try {
+      Collection<Conversation> convs = dbConnection.dbQueryConversations("SELECT * " +
+              "FROM CONVERSATIONS;");
+      for (Conversation conversation : convs)
+        summaries.add(ConversationSummary.fromConversation(conversation));
+
+    } catch (Exception e) {
+      System.err.println(e.getClass().getName() + ": " + e.getMessage());
+      System.exit(0);
+    }
+
     return summaries;
   }
 

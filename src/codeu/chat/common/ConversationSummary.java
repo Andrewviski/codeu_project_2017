@@ -68,9 +68,13 @@ public final class ConversationSummary implements ListViewable {
     return new ConversationSummary(c.id, c.owner, c.creation, c.title);
   }
 
-  // How this object should appear in a user-viewable list
-  @Override
-  public String listView() {
-    return title;
-  }
+    public static ConversationSummary fromConversation(Conversation c) {
+        return new ConversationSummary(c.id, c.owner, c.creation, c.title);
+    }
+
+    // How this object should appear in a user-viewable list
+    @Override
+    public String listView() {
+        return title;
+    }
 }

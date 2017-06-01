@@ -459,6 +459,13 @@ public final class Model {
 
     add(conversation.owner, conversation.id);
   }
+  public boolean addUserToConversation(Conversation conversation,User user){
+    try {
+      dbConnection.dbUpdate("INSERT INTO USER_CONVERSATION (ID,USERID,CONVERSATIONID) " +
+              "VALUES ("
+              + SQLFormatter.sqlID(conversation.id, user.id) + ", "
+              + SQLFormatter.sqlID(user.id) + ", "
+              + SQLFormatter.sqlID(conversation.id) + ");");
 
   // Add user to a conversation
   public void add(Uuid user, Uuid conversation) {
