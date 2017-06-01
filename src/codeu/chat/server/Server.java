@@ -181,14 +181,11 @@ public final class Server {
           result = view.getUsers(temp).toArray();
           if (issuerId == userId || result.length<=0)
             response = false;
-
+          //try to insert in db
+          User user = (User) result[0];
+          if (!controller.addUserToConversation(conv, user))
+            response = false;
         }
-      }
-      //try to insert in db
-      if(response) {
-        User user = (User) result[0];
-        if (!controller.addUserToConversation(conv, user)) ;
-        response = false;
       }
 
       Serializers.INTEGER.write(out, NetworkCode.ADD_USER_TO_CONVERSATION_RESPONSE);
