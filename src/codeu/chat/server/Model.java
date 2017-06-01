@@ -111,8 +111,7 @@ public final class Model {
     String query;
     Vector<String> parameters = new Vector<>();
 
-    parameters.add("Admin");
-    query = "UNAME = ?";
+    query = "ID = '100.0'";
 
     Collection<User> returnUser = userById(parameters, query);
     if(!returnUser.isEmpty()){

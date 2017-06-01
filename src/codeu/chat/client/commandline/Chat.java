@@ -317,7 +317,7 @@ public final class Chat {
 
   // Add a new user.
   private void addUser(String name, String password) {
-    String ret = clientContext.user.addUser(name, password);
+    String ret = clientContext.user.addUser(clientContext.user.getCurrent(), name, password);
     if (ret != null)
       System.out.println(ret);
   }

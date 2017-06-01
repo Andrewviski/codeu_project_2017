@@ -95,13 +95,13 @@ public final class ClientUser {
     printUser(current);
   }
 
-  public String addUser(String name, String password) {
+  public String addUser(User issuer, String name, String password) {
     if (/*current == null ||  !current.name.equals("Admin")*/ false) {
       return "Must be Admin!";
     } else {
       final boolean validInputs = isValidName(name) && isValidPassword(password);
 
-      final User user = (validInputs) ? controller.newUser(name, password) : null;
+      final User user = (validInputs) ? controller.newUser(issuer, name, password) : null;
 
       if (user == null) {
         return String.format("Error: user not created - [0].\n",

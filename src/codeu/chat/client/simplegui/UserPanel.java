@@ -173,7 +173,7 @@ public final class UserPanel extends JPanel {
             null, null, "");
 
         if (s != null && s.length() > 0 && p != null && p.length() > 0) {
-          String ret = clientContext.user.addUser(s, p);
+          String ret = clientContext.user.addUser(clientContext.user.getCurrent(), s, p);
           JOptionPane.showMessageDialog(UserPanel.this, ret);
           UserPanel.this.getAllUsers(listModel);
         }

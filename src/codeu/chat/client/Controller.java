@@ -66,13 +66,14 @@ public class Controller implements BasicController {
   }
 
   @Override
-  public User newUser(String name, String password) {
+  public User newUser(User issuer, String name, String password) {
 
     User response = null;
 
     try (final Connection connection = source.connect()) {
 
       Serializers.INTEGER.write(connection.out(), NetworkCode.NEW_USER_REQUEST);
+      User.SERIALIZER.write(connection.out(), issuer);
       Serializers.STRING.write(connection.out(), name);
       Serializers.STRING.write(connection.out(), password);
       LOG.info("newUser: Request completed.");
@@ -82,6 +83,10 @@ public class Controller implements BasicController {
         LOG.info("newUser: Response completed.");
       } else {
         LOG.error("Response from server failed.");
+      }
+
+      if (response == null) {
+        LOG.info("User not created. Issuer is not Admin");
       }
     } catch (Exception ex) {
       System.out.println("ERROR: Exception during call on server. Check log for details.");

@@ -14,6 +14,7 @@
 
 package codeu.chat.server;
 
+import java.io.IOException;
 import java.util.Collection;
 
 import codeu.chat.codeU_db.DataBaseConnection;
@@ -46,7 +47,17 @@ public final class Controller implements RawController, BasicController {
     this.model = model;
     this.uuidGenerator = new RandomUuidGenerator(serverId, System.currentTimeMillis());
     if (this.model.getAdmin() == null)
-      this.model.add(new User(createId(), "Admin", Time.now(), "admin"));
+      this.model.add(createAdmin());
+  }
+
+  private User createAdmin() {
+    User admin = null;
+
+    try {
+      admin = new User(Uuid.parse("100.0000000000"), "Admin", Time.fromMs(0), "admin");
+    } catch (IOException ex) {    }
+
+    return admin;
   }
 
   @Override
@@ -55,8 +66,11 @@ public final class Controller implements RawController, BasicController {
   }
 
   @Override
-  public User newUser(String name, String password) {
-    return newUser(createId(), name, Time.now(), password);
+  public User newUser(User issuer, String name, String password) {
+    if(issuer.id.equals(model.getAdmin().id))
+      return newUser(createId(), name, Time.now(), password);
+    else
+      return null;
   }
 
   @Override
