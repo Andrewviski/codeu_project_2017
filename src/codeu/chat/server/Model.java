@@ -349,7 +349,7 @@ public final class Model {
     }
 
     //Initialize USER_CLUSTER Tuple for User
-    add(user.id);
+    addDefaultCluster(user.id);
   }
 
   public Collection<Message> getAllMessagesInConversation(Uuid conversation) {
@@ -714,18 +714,18 @@ public final class Model {
     return dbConnection.getConversationID(parameters, query);
   }
 
-  public void add(Uuid user) {
+  public void addDefaultCluster(Uuid userID) {
     String query;
     Vector<String> parameters = new Vector<>();
 
     try {
-      parameters.add(SQLFormatter.sqlID(user));
+      parameters.add(SQLFormatter.sqlID(userID));
       query = "INSERT INTO USER_CLUSTER (ID, CLUSTER) " +
           "VALUES ( ?, -1);";
 
       dbConnection.dbUpdate(parameters, query);
 
-      LOG.info("User cluster added: " + user);
+      LOG.info("User cluster added: " + userID);
     } catch (Exception e) {
       LOG.info(
           "newUserCluster fail - Verify connection and try again shortly");
@@ -734,13 +734,13 @@ public final class Model {
     }
   }
 
-  public void update(Uuid user, int cluster) {
+  public void assignUserToCluster(Uuid userID, int cluster) {
     String query;
     Vector<String> parameters = new Vector<>();
 
     try {
       parameters.add(Integer.toString(cluster));
-      parameters.add(SQLFormatter.sqlID(user));
+      parameters.add(SQLFormatter.sqlID(userID));
       query = "UPDATE USER_CLUSTER set" +
           " CLUSTER = ?" +
           " where ID = ?" +
@@ -748,13 +748,13 @@ public final class Model {
 
       dbConnection.dbUpdate(parameters, query);
       LOG.info(
-          "updateUser_Cluster success (user.id=%s cluster=%s)",
-          user,
+          "assignUserToCluster success (user.id=%s cluster=%s)",
+          userID,
           Integer.toString(cluster));
     } catch (Exception e) {
       LOG.info(
-          "updateUser_Cluster fail - Database update error (user.id=%s user.cluster=%s)",
-          user,
+          "assignUserToCluster fail - Database update error (user.id=%s user.cluster=%s)",
+          userID,
           Integer.toString(cluster));
       System.err.println(e.getClass().getName() + ": " + e.getMessage());
       System.exit(0);

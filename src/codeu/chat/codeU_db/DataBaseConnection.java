@@ -4,7 +4,6 @@ import codeu.chat.common.Conversation;
 import codeu.chat.common.Message;
 import codeu.chat.common.User;
 import codeu.chat.util.*;
-import org.omg.CORBA.PUBLIC_MEMBER;
 
 import java.sql.*;
 import java.sql.Time;

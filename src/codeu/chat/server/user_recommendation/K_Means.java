@@ -19,8 +19,7 @@ import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSSample;
 import opennlp.tools.postag.POSTaggerME;
 import opennlp.tools.tokenize.WhitespaceTokenizer;
-
-import javax.swing.text.html.HTMLDocument;
+import sun.reflect.generics.reflectiveObjects.LazyReflectiveObjectGenerator;
 
 /**
  * Created by strobe on 23/05/17.
@@ -34,14 +33,16 @@ public class K_Means {
   private final Model model;
   private moodClassifier classifier;
 
+  private boolean isModelTrained;
+
   public K_Means(Model model) {
 
     this.model = model;
     this.classifier = new moodClassifier();
-    //Set the Model File to a correct location after build
+    this.isModelTrained = false;
   }
 
-  private String Tagger(String sentence) throws Exception{
+  private String tagger(String sentence) throws Exception{
     String taggedSentence = null;
     InputStream inputStream = new FileInputStream("./bin/codeu/chat/server/user_recommendation/tools/en-pos-maxent.bin");
     POSModel posModel = new POSModel(inputStream);
@@ -60,7 +61,7 @@ public class K_Means {
     return taggedSentence;
   }
 
-  private void InitializeClusters() {
+  private void initializeClusters() {
     clusterVector = new Vector<>();
     allKeyWords = new HashSet<>();
     Cluster cluster;
@@ -84,24 +85,24 @@ public class K_Means {
     for (int i = 0; i < numClusters; i++) {
       int idx = clustersIdx[i];
       cluster = new Cluster(i);
-      cluster.Initialize(userVector.get(idx));
+      cluster.initialize(userVector.get(idx));
       clusterVector.add(cluster);
     }
   }
 
-  private void InitializeUserVector() {
+  private void initializeUserVector() {
 
     userVector = new Vector<>();
     Collection<User> users = model.getAllUsers(Uuid.NULL);
 
     for (User user : users) {
       UserFeatures features = new UserFeatures(user.id);
-      features.setInterests(InitializeUserInterests(user.id));
+      features.setInterests(initializeUserInterests(user.id));
       userVector.add(features);
     }
   }
 
-  private NavigableMap<String, Mood> InitializeUserInterests(Uuid user) {
+  private NavigableMap<String, Mood> initializeUserInterests(Uuid user) {
 
     NavigableMap<String, Mood> interests = new TreeMap<>();
 
@@ -112,7 +113,7 @@ public class K_Means {
       Mood mood = new Mood(classifier.classifyTweet(message.content.split("\\s+")));
       boolean validWord;
       try {
-        String taggedMessage = Tagger(message.content);
+        String taggedMessage = tagger(message.content);
         for (String word : taggedMessage.split("\\s+")) {
           validWord = false;
           if (word.contains("_NN")) {
@@ -191,9 +192,13 @@ public class K_Means {
 
   public boolean runClusterer(int iterations) {
     System.out.println("Running Clusterer");
-    classifier.trainModel();
-    InitializeUserVector();
-    InitializeClusters();
+    if(!isModelTrained) {
+      System.out.println("Training Model");
+      classifier.trainModel();
+      isModelTrained = true;
+    }
+    initializeUserVector();
+    initializeClusters();
 
     for (int i = 0; i < iterations; i++) {
       clusterAssignment();
@@ -201,7 +206,7 @@ public class K_Means {
     }
 
     for(UserFeatures userFeatures : userVector) {
-      model.update(userFeatures.userID, userFeatures.cluster);
+      model.assignUserToCluster(userFeatures.userID, userFeatures.cluster);
     }
 
     return true;

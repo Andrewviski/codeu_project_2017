@@ -24,7 +24,7 @@ public class Cluster {
     }
   }
 
-  public void Initialize(UserFeatures baseUser) {
+  public void initialize(UserFeatures baseUser) {
     for (NavigableMap.Entry<String, Mood> entry : baseUser.getInterests().entrySet()) {
       interests.put(entry.getKey(), entry.getValue());
     }

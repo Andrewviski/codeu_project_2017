@@ -33,8 +33,6 @@ import codeu.chat.util.Time;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.store.StoreAccessor;
 
-import javax.jws.soap.SOAPBinding;
-
 public final class View implements BasicView, LogicalView, SinglesView {
 
   private final static Logger.Log LOG = Logger.newLog(View.class);

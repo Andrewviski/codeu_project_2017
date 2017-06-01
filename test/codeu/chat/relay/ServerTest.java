@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-    package codeu.chat.relay;
+package codeu.chat.relay;
 
-    import java.util.Collection;
+import java.util.Collection;
 
-    import static org.junit.Assert.*;
-    import org.junit.Test;
-    import org.junit.Before;
+import static org.junit.Assert.*;
+import org.junit.Test;
+import org.junit.Before;
 
-    import codeu.chat.common.Relay;
-    import codeu.chat.util.Time;
-    import codeu.chat.util.Uuid;
+import codeu.chat.common.Relay;
+import codeu.chat.util.Time;
+import codeu.chat.util.Uuid;
 
 public final class ServerTest {
 
