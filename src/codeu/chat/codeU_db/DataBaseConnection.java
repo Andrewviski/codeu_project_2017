@@ -266,8 +266,8 @@ public final class DataBaseConnection {
       ResultSet rs = stmt.executeQuery();
 
       while (rs.next()) {
-        Uuid userID = Uuid.parse(rs.getString("CONVERSATIONID"));
-        found.add(userID);
+        Uuid conversationID = Uuid.parse(rs.getString("CONVERSATIONID"));
+        found.add(conversationID);
       }
 
       rs.close();
@@ -315,6 +315,73 @@ public final class DataBaseConnection {
 
         Message message = new Message(messageID, nextMessageID, prevMessageID, creationTime, authorID, content);
         found.add(message);
+      }
+
+      rs.close();
+      stmt.close();
+
+    } catch (Exception e) {
+      System.err.println(e.getClass().getName() + ": " + e.getMessage());
+      System.exit(0);
+    }
+
+    close();
+    return found;
+  }
+
+  public int getUserCluster(Vector<String> parameters, String str) {
+
+    int userCluster = -1;
+    int parCounter = 1;
+
+    open();
+    try {
+
+      PreparedStatement stmt = c.prepareStatement(str);
+
+      for(String parameter : parameters) {
+        stmt.setString(parCounter, parameter);
+        parCounter++;
+      }
+
+      ResultSet rs = stmt.executeQuery();
+
+      if (rs.next()) {
+        userCluster = rs.getInt("CLUSTER");
+      }
+
+      rs.close();
+      stmt.close();
+
+    } catch (Exception e) {
+      System.err.println(e.getClass().getName() + ": " + e.getMessage());
+      System.exit(0);
+    }
+
+    close();
+    return userCluster;
+  }
+
+  public Collection<Uuid> getUsersInCluster(Vector<String> parameters, String str) {
+
+    final Collection<Uuid> found = new ArrayList<>();
+    int parCounter = 1;
+
+    open();
+    try {
+
+      PreparedStatement stmt = c.prepareStatement(str);
+
+      for(String parameter : parameters) {
+        stmt.setString(parCounter, parameter);
+        parCounter++;
+      }
+
+      ResultSet rs = stmt.executeQuery();
+
+      while (rs.next()) {
+        Uuid userID = Uuid.parse(rs.getString("ID"));
+        found.add(userID);
       }
 
       rs.close();
@@ -400,17 +467,32 @@ public final class DataBaseConnection {
       stmt = c.prepareStatement(sql);
       stmt.executeUpdate();
       stmt.close();
-      c.commit();
 
     } catch (Exception e) {
       System.err.println(e.getClass().getName() + ": " + e.getMessage());
       System.exit(0);
     }
     System.out.println("Table <MESSAGES> created successfully");
+
+    try {
+      String sql = "CREATE TABLE USER_CLUSTER " +
+          "(ID                VARCHAR(16) PRIMARY KEY NOT NULL, " +
+          " CLUSTER           INT                     NOT NULL) ";
+      stmt = c.prepareStatement(sql);
+      stmt.executeUpdate();
+      stmt.close();
+      c.commit();
+
+    } catch (Exception e) {
+      System.err.println(e.getClass().getName() + ": " + e.getMessage());
+      System.exit(0);
+    }
+    System.out.println("Table <USER_CLUSTER> created successfully");
     close();
   }
 
   public void dropTables() {
+    open();
     Statement stmt = null;
     //drop tables before creating them
     try {
@@ -434,11 +516,17 @@ public final class DataBaseConnection {
       stmt.executeUpdate(sql);
       stmt.close();
 
+      stmt = c.createStatement();
+      sql = "DROP TABLE USER_CLUSTER";
+      stmt.executeUpdate(sql);
+      stmt.close();
+
       c.commit();
     } catch (Exception e) {
       System.err.println(e.getClass().getName() + ": " + e.getMessage());
       System.exit(0);
     }
+    close();
   }
 
 }

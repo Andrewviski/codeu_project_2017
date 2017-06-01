@@ -24,12 +24,9 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import codeu.chat.common.*;
-import codeu.chat.util.Logger;
-import codeu.chat.util.Serializers;
-import codeu.chat.util.Time;
-import codeu.chat.util.Timeline;
-import codeu.chat.util.Uuid;
+import codeu.chat.util.*;
 import codeu.chat.util.connections.Connection;
+import codeu.chat.server.user_recommendation.K_Means;
 
 public final class Server {
 
@@ -46,6 +43,8 @@ public final class Server {
   private final View view = new View(model);
   private final Controller controller;
 
+  private final K_Means k_means;
+
   private final Relay relay;
   private Uuid lastSeen = Uuid.NULL;
 
@@ -56,6 +55,8 @@ public final class Server {
 
     this.controller = new Controller(id, model);
     this.relay = relay;
+
+    this.k_means = new K_Means(model);
 
     timeline.scheduleNow(new Runnable() {
       @Override
@@ -235,6 +236,24 @@ public final class Server {
 
       Serializers.INTEGER.write(out, NetworkCode.GET_MESSAGES_BY_RANGE_RESPONSE);
       Serializers.collection(Message.SERIALIZER).write(out, messages);
+
+    } else if(type == NetworkCode.GENERATE_USER_CLUSTERS_REQUEST) {
+
+      final int iterations = Serializers.INTEGER.read(in);
+
+      boolean success = k_means.runClusterer(iterations);
+
+      Serializers.INTEGER.write(out, NetworkCode.GENERATE_USER_CLUSTERS_RESPONSE);
+      Serializers.BOOLEAN.write(out, success);
+
+    } else if(type == NetworkCode.GET_RECOMMENDED_USERS_REQUEST) {
+
+      final Uuid user = Uuid.SERIALIZER.read(in);
+
+      Collection<User> recommendedUsers = view.getRecommendedUsers(user);
+
+      Serializers.INTEGER.write(out, NetworkCode.GET_RECOMMENDED_USERS_RESPONSE);
+      Serializers.collection(User.SERIALIZER).write(out, recommendedUsers);
 
     } else {
 

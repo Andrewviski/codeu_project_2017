@@ -288,6 +288,36 @@ public final class Model {
     return messageByTime(parameters, query);
   }
 
+  public Collection<Message> getUserMessages(Uuid user) {
+    String query;
+    Vector<String> parameters = new Vector<>();
+
+    parameters.add(SQLFormatter.sqlID(user));
+    query = "USERID = ?";
+
+    return messageByTime(parameters, query);
+  }
+
+  public int getUserCluster(Uuid user) {
+    String query;
+    Vector<String> parameters = new Vector<>();
+
+    parameters.add(SQLFormatter.sqlID(user));
+    query = "ID = ?";
+
+    return getUserCluster(parameters, query);
+  }
+
+  public Collection<Uuid> getUsersIDInCluster(int cluster) {
+    String query;
+    Vector<String> parameters = new Vector<>();
+
+    parameters.add(Integer.toString(cluster));
+    query = "CLUSTER = ?";
+
+    return getUsersIDInCluster(parameters, query);
+  }
+
   public void add(User user) {
     String query;
     Vector<String> parameters = new Vector<>();
@@ -317,6 +347,9 @@ public final class Model {
       System.err.println(e.getClass().getName() + ": " + e.getMessage());
       System.exit(0);
     }
+
+    //Initialize USER_CLUSTER Tuple for User
+    addDefaultCluster(user.id);
   }
 
   public Collection<Message> getAllMessagesInConversation(Uuid conversation) {
@@ -372,7 +405,7 @@ public final class Model {
     }
   }
 
-  public Collection<User> userById(Vector<String> parameters, String where) {
+  private Collection<User> userById(Vector<String> parameters, String where) {
     String query = "SELECT * FROM USERS";
     if (where != null)
       query += " where " + where;
@@ -380,7 +413,7 @@ public final class Model {
     return dbConnection.dbQueryUsers(parameters, query);
   }
 
-  public Collection<User> userByTime(Vector<String> parameters, String where) {
+  private Collection<User> userByTime(Vector<String> parameters, String where) {
     String query = "SELECT * FROM USERS";
     if (where != null)
       query += " where " + where;
@@ -388,7 +421,7 @@ public final class Model {
     return dbConnection.dbQueryUsers(parameters, query);
   }
 
-  public Collection<User> userByText(Vector<String> parameters, String where) {
+  private Collection<User> userByText(Vector<String> parameters, String where) {
     String query = "SELECT * FROM USERS";
     if (where != null)
       query += " where " + where;
@@ -478,7 +511,7 @@ public final class Model {
     }
   }
 
-  public Collection<Conversation> conversationById(Vector<String> parameters, String where) {
+  private Collection<Conversation> conversationById(Vector<String> parameters, String where) {
 
     Collection<Conversation> conversations = new HashSet<>();
 
@@ -516,7 +549,7 @@ public final class Model {
     return conversations;
   }
 
-  public Collection<Conversation> conversationByTime(Vector<String> parameters, String where) {
+  private Collection<Conversation> conversationByTime(Vector<String> parameters, String where) {
     Collection<Conversation> conversations = new ArrayList<>();
 
     String query = "SELECT * FROM CONVERSATIONS";
@@ -553,7 +586,7 @@ public final class Model {
     return conversations;
   }
 
-  public Collection<Conversation> conversationByText(Vector<String> parameters, String where) {
+  private Collection<Conversation> conversationByText(Vector<String> parameters, String where) {
     Collection<Conversation> conversations = new ArrayList<>();
 
     String query = "SELECT * FROM CONVERSATIONS";
@@ -650,7 +683,7 @@ public final class Model {
     }
   }
 
-  public Collection<Message> messageById(Vector<String> parameters, String where) {
+  private Collection<Message> messageById(Vector<String> parameters, String where) {
     String query = "SELECT * FROM MESSAGES";
     if (where != null)
       query += " where " + where;
@@ -658,7 +691,7 @@ public final class Model {
     return dbConnection.dbQueryMessages(parameters, query);
   }
 
-  public Collection<Message> messageByTime(Vector<String> parameters, String where) {
+  private Collection<Message> messageByTime(Vector<String> parameters, String where) {
     String query = "SELECT * FROM MESSAGES";
     if (where != null)
       query += " where " + where;
@@ -666,7 +699,7 @@ public final class Model {
     return dbConnection.dbQueryMessages(parameters, query);
   }
 
-  public Collection<Message> messageByText(Vector<String> parameters, String where) {
+  private Collection<Message> messageByText(Vector<String> parameters, String where) {
     String query = "SELECT * FROM MESSAGES";
     if (where != null)
       query += " where " + where;
@@ -679,5 +712,68 @@ public final class Model {
     parameters.add(SQLFormatter.sqlID(message));
     String query = "SELECT CONVERSATIONID FROM MESSAGES WHERE ID = ?;";
     return dbConnection.getConversationID(parameters, query);
+  }
+
+  public void addDefaultCluster(Uuid userID) {
+    String query;
+    Vector<String> parameters = new Vector<>();
+
+    try {
+      parameters.add(SQLFormatter.sqlID(userID));
+      query = "INSERT INTO USER_CLUSTER (ID, CLUSTER) " +
+          "VALUES ( ?, -1);";
+
+      dbConnection.dbUpdate(parameters, query);
+
+      LOG.info("User cluster added: " + userID);
+    } catch (Exception e) {
+      LOG.info(
+          "newUserCluster fail - Verify connection and try again shortly");
+      System.err.println(e.getClass().getName() + ": " + e.getMessage());
+      System.exit(0);
+    }
+  }
+
+  public void assignUserToCluster(Uuid userID, int cluster) {
+    String query;
+    Vector<String> parameters = new Vector<>();
+
+    try {
+      parameters.add(Integer.toString(cluster));
+      parameters.add(SQLFormatter.sqlID(userID));
+      query = "UPDATE USER_CLUSTER set" +
+          " CLUSTER = ?" +
+          " where ID = ?" +
+          ";";
+
+      dbConnection.dbUpdate(parameters, query);
+      LOG.info(
+          "assignUserToCluster success (user.id=%s cluster=%s)",
+          userID,
+          Integer.toString(cluster));
+    } catch (Exception e) {
+      LOG.info(
+          "assignUserToCluster fail - Database update error (user.id=%s user.cluster=%s)",
+          userID,
+          Integer.toString(cluster));
+      System.err.println(e.getClass().getName() + ": " + e.getMessage());
+      System.exit(0);
+    }
+  }
+
+  private int getUserCluster(Vector<String> parameters, String where) {
+    String query = "SELECT CLUSTER FROM USER_CLUSTER";
+    if (where != null)
+      query += " where " + where;
+    query += " ORDER BY CLUSTER ASC;";
+    return dbConnection.getUserCluster(parameters, query);
+  }
+
+  private Collection<Uuid> getUsersIDInCluster(Vector<String> parameters, String where) {
+    String query = "SELECT ID FROM USER_CLUSTER";
+    if (where != null)
+      query += " where " + where;
+    query += " ORDER BY ID ASC;";
+    return dbConnection.getUsersInCluster(parameters, query);
   }
 }

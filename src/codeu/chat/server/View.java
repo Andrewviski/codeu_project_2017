@@ -149,6 +149,20 @@ public final class View implements BasicView, LogicalView, SinglesView {
     return found;
   }
 
+  public Collection<User> getRecommendedUsers (Uuid user) {
+
+    Collection<User> found = new ArrayList<>();
+    int cluster = model.getUserCluster(user);
+
+    if(cluster == -1) {
+      return found;
+    }
+
+    Collection<Uuid> userIDs = model.getUsersIDInCluster(cluster);
+
+    return getUsers(userIDs);
+  }
+
   @Override
   public User findUser(Uuid id) {
     return model.getSingleUser(id);
