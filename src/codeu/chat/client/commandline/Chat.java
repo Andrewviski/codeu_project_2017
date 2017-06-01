@@ -66,7 +66,8 @@ public final class Chat {
         System.out.println("   m-show <count>   - show next <count> messages.");
     }
 
-    // Prompt for new command.    private void promptForCommand() {
+    // Prompt for new command.
+    private void promptForCommand() {
         System.out.print(PROMPT);
     }
 
@@ -155,7 +156,7 @@ public final class Chat {
                 if(!clientContext.conversation.hasCurrent()){
                     System.out.println("ERROR: no conversation selected.");
                 }else{
-                    addUserToCoversation(user,clientContext.conversation.getCurrent());
+                    addUserToCoversation(user);
                 }
             }
 
