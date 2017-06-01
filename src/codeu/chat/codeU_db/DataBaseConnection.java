@@ -527,6 +527,7 @@ public final class DataBaseConnection {
       System.err.println(e.getClass().getName() + ": " + e.getMessage());
       System.exit(0);
     }
+    close();
   }
 
 }
