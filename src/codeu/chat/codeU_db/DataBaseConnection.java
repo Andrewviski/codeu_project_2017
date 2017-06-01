@@ -493,6 +493,7 @@ public final class DataBaseConnection {
   }
 
   public void dropTables() {
+    open();
     Statement stmt = null;
     //drop tables before creating them
     try {
