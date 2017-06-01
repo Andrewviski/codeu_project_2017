@@ -140,35 +140,51 @@ public final class Server {
       final Uuid issuerId = Uuid.SERIALIZER.read(in);
       final Uuid userId = Uuid.SERIALIZER.read(in);
       final Uuid conversationId = Uuid.SERIALIZER.read(in);
-      boolean response = controller.addUserToConversation(issuerId, userId, conversationId);
+      boolean response = true;
 
       // TODO: make code cleaner here
 
+      Object[] result;
       //check conversation exists
       Collection<Uuid> temp = new HashSet<Uuid>();
       temp.add(conversationId);
-      Conversation conv = (Conversation) view.getConversations(temp).toArray()[0];
-      if (conv == null)
+      Conversation conv;
+
+      result=view.getConversations(temp).toArray();
+      if (result.length<=0) {
         response = false;
+      }
+      else{
+        conv = (Conversation) result[0];
 
-      //check issuer exist and he is owner of the conversation
-      temp.clear();
-      temp.add(issuerId);
-      User issuer = (User) view.getUsers(temp).toArray()[0];
-      if (issuer == null || (!issuer.id.equals(conv.owner.id())))
-        response = false;
+        //check issuer exist and he is the owner of the conversation
+        temp.clear();
+        temp.add(issuerId);
+        User issuer;
+        result =view.getUsers(temp).toArray();
+        if (result.length<=0)
+          response = false;
+        else
+        {
+          issuer = (User)result[0];
+          if(!issuer.id.equals(conv.owner.id())){
+            response=false;
+          }
+          //make sure the added user exist and not same as owner
+          temp.clear();
+          temp.add(userId);
+          result = view.getUsers(temp).toArray();
+          if (issuerId == userId || result.length<=0)
+            response = false;
 
-      //make sure the added user exist and not same as owner
-      temp.clear();
-      temp.add(userId);
-      User user = (User) view.getUsers(temp).toArray()[0];
-      if (issuerId == userId || user == null)
-        response = false;
-
-
+        }
+      }
       //try to insert in db
-      if(!controller.addUserToConversation(conv,user))
-        response=false;
+      if(response) {
+        User user = (User) result[0];
+        if (!controller.addUserToConversation(conv, user)) ;
+        response = false;
+      }
 
       Serializers.INTEGER.write(out, NetworkCode.ADD_USER_TO_CONVERSATION_RESPONSE);
       Serializers.BOOLEAN.write(out, response);
