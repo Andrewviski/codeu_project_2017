@@ -55,4 +55,11 @@ public class UserFeatures {
   public int getCluster() {
     return cluster;
   }
+
+  public void printUserFeatures() {
+    for (String keyword : interests.keySet()) {
+      System.out.println("Values for: " + keyword);
+      interests.get(keyword).printMood();
+    }
+  }
 }
