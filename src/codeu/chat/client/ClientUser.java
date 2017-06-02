@@ -165,7 +165,7 @@ public final class ClientUser {
 
   //Only the ADMIN should be able to run this function
   public boolean generateClusters(int iterations) {
-    return controller.generateUserClusters(iterations);
+    return controller.generateUserClusters(iterations, current.id);
   }
 
   public void getRecommendedUsers() {

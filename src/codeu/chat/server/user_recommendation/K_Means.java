@@ -201,7 +201,11 @@ public class K_Means {
     }
   }
 
-  public boolean runClusterer(int iterations) {
+  public boolean runClusterer(int iterations, Uuid userID) {
+    if (!model.getAdmin().id.equals(userID)) {
+      return false;
+    }
+
     System.out.println("Running Clusterer");
     if(!isModelTrained) {
       System.out.println("Training Model");

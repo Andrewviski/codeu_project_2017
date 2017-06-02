@@ -52,7 +52,7 @@ public final class Chat {
     System.out.println("   sign-out  - sign out current user.");
     System.out.println("   current   - show current user, conversation, message.");
     System.out.println("User commands: [Require admin privileges]");
-    System.out.println("   u-add <name>  - add a new user.");
+    System.out.println("   u-add <name>  - add a new user. [ADMIN ONLY]");
     System.out.println("   u-list-all    - list all users known to system.");
     System.out.println("Conversation commands:");
     System.out.println("   c-add <title>    - add a new conversation.");
@@ -216,7 +216,7 @@ public final class Chat {
       } else {
         int iterations = Integer.parseInt(tokenScanner.next().trim());
         if(!clientContext.user.generateClusters(iterations)) {
-          System.out.println("ERROR: Clusters not generated.");
+          System.out.println("ERROR: Clusters not generated. Only Admin can perform this action");
         }
       }
 

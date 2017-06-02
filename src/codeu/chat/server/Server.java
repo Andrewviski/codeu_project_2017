@@ -257,8 +257,9 @@ public final class Server {
     } else if(type == NetworkCode.GENERATE_USER_CLUSTERS_REQUEST) {
 
       final int iterations = Serializers.INTEGER.read(in);
+      final Uuid userID = Uuid.SERIALIZER.read(in);
 
-      boolean success = k_means.runClusterer(iterations);
+      boolean success = k_means.runClusterer(iterations, userID);
 
       Serializers.INTEGER.write(out, NetworkCode.GENERATE_USER_CLUSTERS_RESPONSE);
       Serializers.BOOLEAN.write(out, success);

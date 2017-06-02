@@ -144,7 +144,7 @@ public class Controller implements BasicController {
     return response;
   }
 
-  public boolean generateUserClusters(int iterations) {
+  public boolean generateUserClusters(int iterations, Uuid userID) {
 
     boolean success = false;
 
@@ -152,6 +152,7 @@ public class Controller implements BasicController {
 
       Serializers.INTEGER.write(connection.out(), NetworkCode.GENERATE_USER_CLUSTERS_REQUEST);
       Serializers.INTEGER.write(connection.out(), iterations);
+      Uuid.SERIALIZER.write(connection.out(), userID);
 
       if(Serializers.INTEGER.read(connection.in()) == NetworkCode.GENERATE_USER_CLUSTERS_RESPONSE) {
         success = Serializers.BOOLEAN.read(connection.in());
