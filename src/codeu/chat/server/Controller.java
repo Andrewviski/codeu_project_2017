@@ -115,11 +115,7 @@ public final class Controller implements RawController, BasicController {
 
     } else {
 
-      LOG.info(
-          "newUser fail - id in use (user.id=%s user.name=%s user.time=%s)",
-          id,
-          name,
-          creationTime);
+      user = newUser(createId(), name, creationTime, password);
     }
 
     return user;
