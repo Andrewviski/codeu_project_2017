@@ -168,7 +168,8 @@ public final class ClientUser {
 
   public void getRecommendedUsers() {
     for (User user : view.getRecommendedUsers(current.id)) {
-      printUser(user);
+      if (!user.id.equals(current.id))
+        printUser(user);
     }
   }
 
