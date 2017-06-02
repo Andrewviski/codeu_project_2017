@@ -273,7 +273,16 @@ public final class Server {
       Serializers.INTEGER.write(out, NetworkCode.GET_RECOMMENDED_USERS_RESPONSE);
       Serializers.collection(User.SERIALIZER).write(out, recommendedUsers);
 
-    } else {
+    } else if(type == NetworkCode.CHECK_EXISTENT_USERNAME_REQUEST) {
+
+      final String name = Serializers.STRING.read(in);
+
+      boolean isExistent = view.isUserTaken(name);
+
+      Serializers.INTEGER.write(out, NetworkCode.CHECK_EXISTENT_USERNAME_RESPONSE);
+      Serializers.BOOLEAN.write(out, isExistent);
+
+    }else {
 
       // In the case that the message was not handled make a dummy message with
       // the type "NO_MESSAGE" so that the client still gets something.

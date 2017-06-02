@@ -67,6 +67,29 @@ public final class View implements BasicView, LogicalView{
     return users;
   }
 
+  public boolean checkValidUserName(String name) {
+
+    boolean isExistent = true;
+
+    try (final Connection connection = source.connect()) {
+
+      Serializers.INTEGER.write(connection.out(), NetworkCode.CHECK_EXISTENT_USERNAME_REQUEST);
+      Serializers.STRING.write(connection.out(), name);
+
+      if (Serializers.INTEGER.read(connection.in()) == NetworkCode.CHECK_EXISTENT_USERNAME_RESPONSE) {
+        isExistent = Serializers.BOOLEAN.read(connection.in());
+      } else {
+        LOG.error("Response from server failed.");
+      }
+
+    } catch (Exception ex) {
+      System.out.println("ERROR: Exception during call on server. Check log for details.");
+      LOG.error(ex, "Exception during call on server.");
+    }
+
+    return isExistent;
+  }
+
   @Override
   public Collection<ConversationSummary> getAllConversations(Uuid userID) {
 

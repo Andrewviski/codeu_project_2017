@@ -163,6 +163,15 @@ public final class View implements BasicView, LogicalView, SinglesView {
     return getUsers(userIDs);
   }
 
+  public boolean isUserTaken(String name) {
+    if (model.userByExactText(name).isEmpty()) {
+      return false;
+    }
+    else {
+      return true;
+    }
+  }
+
   @Override
   public User findUser(Uuid id) {
     return model.getSingleUser(id);

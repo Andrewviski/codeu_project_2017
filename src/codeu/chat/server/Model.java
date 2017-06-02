@@ -24,6 +24,8 @@ import codeu.chat.util.Time;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.store.Store;
 
+import javax.jws.soap.SOAPBinding;
+
 public final class Model {
 
   private static final Comparator<Uuid> UUID_COMPARE = new Comparator<Uuid>() {
@@ -151,6 +153,26 @@ public final class Model {
     query = intersect(parameters, ids, isBlackList);
 
     return userById(parameters, query);
+  }
+
+  public Collection<User> userByText(String filter) {
+    String query;
+    Vector<String> parameters = new Vector<>();
+
+    parameters.add(filter);
+    query = "UNAME LIKE '%?%'";
+
+    return userByText(parameters, query);
+  }
+
+  public Collection<User> userByExactText(String filter) {
+    String query;
+    Vector<String> parameters = new Vector<>();
+
+    parameters.add(filter);
+    query = "UNAME = ?";
+
+    return userByText(parameters, query);
   }
 
   public Collection<User> getAllUsers(Uuid conversation) {
