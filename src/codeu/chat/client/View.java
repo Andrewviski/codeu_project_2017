@@ -68,13 +68,14 @@ public final class View implements BasicView, LogicalView{
   }
 
   @Override
-  public Collection<ConversationSummary> getAllConversations() {
+  public Collection<ConversationSummary> getAllConversations(Uuid userID) {
 
     final Collection<ConversationSummary> summaries = new ArrayList<>();
 
     try (final Connection connection = source.connect()) {
 
       Serializers.INTEGER.write(connection.out(), NetworkCode.GET_ALL_CONVERSATIONS_REQUEST);
+      Uuid.SERIALIZER.write(connection.out(), userID);
 
       if (Serializers.INTEGER.read(connection.in()) == NetworkCode.GET_ALL_CONVERSATIONS_RESPONSE) {
         summaries.addAll(Serializers.collection(ConversationSummary.SERIALIZER).read(connection.in()));

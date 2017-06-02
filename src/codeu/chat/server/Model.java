@@ -85,7 +85,13 @@ public final class Model {
     String operator = null;
 
     if (ids.isEmpty()) {
-      return found;
+      if(!isBlacklist) {
+        found = "'No ID Specified'";
+        return found;
+      }
+      else {
+        return found;
+      }
     }
 
     found = "";
@@ -201,7 +207,12 @@ public final class Model {
       parameters.add(SQLFormatter.sqlID(user));
       query = "SELECT * FROM USER_CONVERSATION where USERID = ?;";
 
-      Collection<Uuid> conversationsIDs = dbConnection.getUsersInConversations(parameters, query);
+      Collection<Uuid> conversationsIDs = dbConnection.getConversationsOfUser(parameters, query);
+
+      System.out.println("getConversationsOdUser");
+      for(Uuid conv : conversationsIDs) {
+        System.out.println("ConvID: " + conv);
+      }
 
       parameters.clear();
       query = intersect(parameters, conversationsIDs, false);
@@ -455,6 +466,7 @@ public final class Model {
     }
 
     addUserToConversation(conversation.owner, conversation.id);
+    addUserToConversation(getAdmin().id, conversation.id);
   }
 
   // Add user to a conversation

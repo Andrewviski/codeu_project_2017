@@ -148,7 +148,7 @@ public final class Controller implements RawController, BasicController {
       Conversation conversation = model.getSingleConversation(conversationID);
       //Check if conversation exists and Issuer is owner
       if (conversation != null && conversation.owner.equals(issuerID)) {
-        response = model.addUserToConversation(conversationID, userID);
+        response = model.addUserToConversation(userID, conversationID);
       }
       else {
         response = false;

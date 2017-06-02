@@ -175,8 +175,9 @@ public final class Server {
       Serializers.collection(User.SERIALIZER).write(out, users);
 
     } else if (type == NetworkCode.GET_ALL_CONVERSATIONS_REQUEST) {
+      Uuid userID = Uuid.SERIALIZER.read(in);
 
-      final Collection<ConversationSummary> conversations = view.getAllConversations();
+      final Collection<ConversationSummary> conversations = view.getAllConversations(userID);
 
       Serializers.INTEGER.write(out, NetworkCode.GET_ALL_CONVERSATIONS_RESPONSE);
       Serializers.collection(ConversationSummary.SERIALIZER).write(out, conversations);

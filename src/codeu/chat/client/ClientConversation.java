@@ -176,7 +176,7 @@ public final class ClientConversation {
     summariesByUuid.clear();
     summariesSortedByTitle = new Store<>(String.CASE_INSENSITIVE_ORDER);
 
-    for (final ConversationSummary cs : view.getAllConversations()) {
+    for (final ConversationSummary cs : view.getAllConversations(userContext.getCurrent().id)) {
       summariesByUuid.put(cs.id, cs);
       summariesSortedByTitle.insert(cs.title, cs);
     }
