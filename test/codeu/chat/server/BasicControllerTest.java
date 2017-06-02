@@ -81,6 +81,41 @@ public final class BasicControllerTest {
   }
 
   @Test
+  public void testAddUserToConversation() {
+
+    final User admin = createAdmin();
+    final User owner = controller.newUser(admin, "owner", "password");
+
+    assertFalse(
+        "Check that owner has a valid reference",
+        owner == null);
+
+    final Conversation conversation = controller.newConversation(
+        "conversation",
+        owner.id);
+
+    assertFalse(
+        "Check that conversation has a valid reference",
+        conversation == null);
+
+    final User user = controller.newUser(admin, "user", "password");
+
+    assertFalse(
+        "Check that user has a valid reference",
+        user == null);
+
+    final boolean success = controller.addUserToConversation(
+        owner.id,
+        user.id,
+        conversation.id
+    );
+
+    assertFalse(
+        "Check that conversation and user have a valid reference",
+        success == false);
+  }
+
+  @Test
   public void testAddMessage() {
 
     final User admin = createAdmin();

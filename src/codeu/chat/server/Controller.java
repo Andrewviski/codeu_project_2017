@@ -136,6 +136,7 @@ public final class Controller implements RawController, BasicController {
     return conversation;
   }
 
+  @Override
   public boolean addUserToConversation(Uuid issuerID, Uuid userID, Uuid conversationID) {
     boolean response;
 

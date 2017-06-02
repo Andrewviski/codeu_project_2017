@@ -51,4 +51,5 @@ public interface BasicController {
   //  Whether conversations can have the same title is undefined.
   Conversation newConversation(String title, Uuid owner);
 
+  boolean addUserToConversation(Uuid issuerID, Uuid userID, Uuid conversationID);
 }

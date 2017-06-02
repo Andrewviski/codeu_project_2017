@@ -120,6 +120,7 @@ public class Controller implements BasicController {
     return response;
   }
 
+  @Override
   public boolean addUserToConversation(Uuid issuerId, Uuid userId, Uuid conversationID) {
 
     boolean response = false;
