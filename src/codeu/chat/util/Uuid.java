@@ -179,28 +179,28 @@ public final class Uuid {
     }
   }
 
-  // Parse
+  // FROM STRING
   //
   // Create a uuid from a sting.
-  public static Uuid parse(String string) throws IOException {
-    return parse(null, string.split("\\."), 0);
+  public static Uuid fromString(String string) {
+    return fromString(null, string.split("\\."), 0);
   }
 
+<<<<<<< HEAD
   private static Uuid parse(final Uuid root, String[] tokens, int index) throws IOException {
     final long id = Long.parseLong(tokens[index]);
+=======
+  private static Uuid fromString(final Uuid root, String[] tokens, int index) {
 
-    if ((id >> 32) != 0) {
-      throw new IOException(String.format(
-          "ID value '%s' is too large to be an unsigned 32 bit integer",
-          tokens[index]));
-    }
+    final int id = Integer.parseInt(tokens[index]);
+>>>>>>> parent of 98e7d23... Fixing Uuid Parse Error (#66)
 
-    final Uuid link = new Uuid(root, (int)(id & 0xFFFFFFFF));
+    final Uuid link = new Uuid(root, id);
 
     final int nextIndex = index + 1;
 
     return nextIndex < tokens.length ?
-        parse(link, tokens, nextIndex) :
+        fromString(link, tokens, nextIndex) :
         link;
   }
 }
