@@ -126,3 +126,9 @@ Classes that are shared by the clients and servers.
 ### codeu.chat.util
 
 Some basic infrastructure classes used throughout the project.
+
+
+## Disclaimer
+
+"Training data for our machine learning model was gathered from the "Data For Everyone" 
+dataset library at © Crowdflower Inc. (https://www.crowdflower.com/data-for-everyone)"
