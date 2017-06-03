@@ -69,8 +69,18 @@ public class Mood {
     }
 
     for (int i = 0; i < 12; i++) {
-      dist += ((mood1.getMood(i) + mood2.getMood(i)) * (mood1.getMood(i) + mood2.getMood(i)));
+      dist += ((mood1.getMood(i) - mood2.getMood(i)) * (mood1.getMood(i) - mood2.getMood(i)));
     }
     return dist;
+  }
+
+  public void printMood() {
+    if (moods == null)
+    {
+      System.out.println("Word Not Included");
+    }
+    for (int i = 0; i < 12; i++) {
+      System.out.println(i + ": " + moods[i]);
+    }
   }
 }

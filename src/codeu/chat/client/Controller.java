@@ -66,13 +66,14 @@ public class Controller implements BasicController {
   }
 
   @Override
-  public User newUser(String name, String password) {
+  public User newUser(User issuer, String name, String password) {
 
     User response = null;
 
     try (final Connection connection = source.connect()) {
 
       Serializers.INTEGER.write(connection.out(), NetworkCode.NEW_USER_REQUEST);
+      User.SERIALIZER.write(connection.out(), issuer);
       Serializers.STRING.write(connection.out(), name);
       Serializers.STRING.write(connection.out(), password);
       LOG.info("newUser: Request completed.");
@@ -82,6 +83,10 @@ public class Controller implements BasicController {
         LOG.info("newUser: Response completed.");
       } else {
         LOG.error("Response from server failed.");
+      }
+
+      if (response == null) {
+        LOG.info("User not created. Issuer is not Admin");
       }
     } catch (Exception ex) {
       System.out.println("ERROR: Exception during call on server. Check log for details.");
@@ -115,7 +120,32 @@ public class Controller implements BasicController {
     return response;
   }
 
-  public boolean generateUserClusters(int iterations) {
+  @Override
+  public boolean addUserToConversation(Uuid issuerId, Uuid userId, Uuid conversationID) {
+
+    boolean response = false;
+
+    try (final Connection connection = source.connect()) {
+
+      Serializers.INTEGER.write(connection.out(), NetworkCode.ADD_USER_TO_CONVERSATION_REQUEST);
+      Uuid.SERIALIZER.write(connection.out(), issuerId);
+      Uuid.SERIALIZER.write(connection.out(), userId);
+      Uuid.SERIALIZER.write(connection.out(), conversationID);
+
+      if (Serializers.INTEGER.read(connection.in()) == NetworkCode.ADD_USER_TO_CONVERSATION_RESPONSE) {
+        response = Serializers.BOOLEAN.read(connection.in());
+      } else {
+        LOG.error("Response from server failed.");
+      }
+    } catch (Exception ex) {
+      System.out.println("ERROR: Exception during call on server. Check log for details.");
+      LOG.error(ex, "Exception during call on server.");
+    }
+
+    return response;
+  }
+
+  public boolean generateUserClusters(int iterations, Uuid userID) {
 
     boolean success = false;
 
@@ -123,6 +153,7 @@ public class Controller implements BasicController {
 
       Serializers.INTEGER.write(connection.out(), NetworkCode.GENERATE_USER_CLUSTERS_REQUEST);
       Serializers.INTEGER.write(connection.out(), iterations);
+      Uuid.SERIALIZER.write(connection.out(), userID);
 
       if(Serializers.INTEGER.read(connection.in()) == NetworkCode.GENERATE_USER_CLUSTERS_RESPONSE) {
         success = Serializers.BOOLEAN.read(connection.in());

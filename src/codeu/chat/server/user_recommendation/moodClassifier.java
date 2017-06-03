@@ -44,7 +44,6 @@ public class moodClassifier {
   public double[] classifyTweet(String[] sentence) {
     DocumentCategorizerME categorizer = new DocumentCategorizerME(model);
     double[] result = categorizer.categorize(sentence);
-    System.out.println("RESULT: " + categorizer.getBestCategory(result));
 
     return result;
   }

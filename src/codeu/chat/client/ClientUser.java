@@ -45,14 +45,16 @@ public final class ClientUser {
   }
 
   // Validate the username string
-  static public boolean isValidName(String userName) {
+  public boolean isValidName(String userName) {
     boolean clean = true;
     if (userName.length() == 0) {
       clean = false;
     } else {
-
-      // TODO: check for invalid characters
-
+      boolean isExistent = view.checkValidUserName(userName);
+      if (isExistent) {
+        clean = false;
+        System.out.println("Username already taken.");
+      }
     }
     return clean;
   }
@@ -95,23 +97,19 @@ public final class ClientUser {
     printUser(current);
   }
 
-  public String addUser(String name, String password) {
-    if (/*current == null ||  !current.name.equals("Admin")*/ false) {
-      return "Must be Admin!";
+  public String addUser(User issuer, String name, String password) {
+    final boolean validInputs = isValidName(name) && isValidPassword(password);
+
+    final User user = (validInputs) ? controller.newUser(issuer, name, password) : null;
+
+    if (user == null) {
+      return String.format("Error: user not created - [0].\n",
+          (validInputs) ? "server failure" : "bad input value");
     } else {
-      final boolean validInputs = isValidName(name) && isValidPassword(password);
-
-      final User user = (validInputs) ? controller.newUser(name, password) : null;
-
-      if (user == null) {
-        return String.format("Error: user not created - [0].\n",
-            (validInputs) ? "server failure" : "bad input value");
-      } else {
-        LOG.info("New user complete, Name= \"%s\" UUID=%s", user.name, user.id);
-        updateUsers();
-      }
-      return "User Added successfully!";
+      LOG.info("New user complete, Name= \"%s\" UUID=%s", user.name, user.id);
+      updateUsers();
     }
+    return "User Added successfully!";
   }
 
   public void showAllUsers() {
@@ -165,12 +163,17 @@ public final class ClientUser {
 
   //Only the ADMIN should be able to run this function
   public boolean generateClusters(int iterations) {
-    return controller.generateUserClusters(iterations);
+    return controller.generateUserClusters(iterations, current.id);
   }
 
   public void getRecommendedUsers() {
     for (User user : view.getRecommendedUsers(current.id)) {
-      printUser(user);
+      if (!user.id.equals(current.id))
+        printUser(user);
     }
+  }
+
+  public User getByName(String name){
+    return usersByName.first(name);
   }
 }

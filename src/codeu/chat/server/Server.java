@@ -22,6 +22,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import codeu.chat.common.*;
 import codeu.chat.util.*;
@@ -131,10 +133,11 @@ public final class Server {
 
     } else if (type == NetworkCode.NEW_USER_REQUEST) {
 
+      final User issuer = User.SERIALIZER.read(in);
       final String name = Serializers.STRING.read(in);
       final String password = Serializers.STRING.read(in);
 
-      final User user = controller.newUser(name, password);
+      final User user = controller.newUser(issuer, name, password);
 
       Serializers.INTEGER.write(out, NetworkCode.NEW_USER_RESPONSE);
       Serializers.nullable(User.SERIALIZER).write(out, user);
@@ -149,6 +152,19 @@ public final class Server {
       Serializers.INTEGER.write(out, NetworkCode.NEW_CONVERSATION_RESPONSE);
       Serializers.nullable(Conversation.SERIALIZER).write(out, conversation);
 
+    } else if (type == NetworkCode.ADD_USER_TO_CONVERSATION_REQUEST) {
+
+      final Uuid issuerID = Uuid.SERIALIZER.read(in);
+      final Uuid userID = Uuid.SERIALIZER.read(in);
+      final Uuid conversationID = Uuid.SERIALIZER.read(in);
+
+      boolean response = false;
+
+      response = controller.addUserToConversation(issuerID, userID, conversationID);
+
+      Serializers.INTEGER.write(out, NetworkCode.ADD_USER_TO_CONVERSATION_RESPONSE);
+      Serializers.BOOLEAN.write(out, response);
+
     } else if (type == NetworkCode.GET_USERS_BY_ID_REQUEST) {
 
       final Collection<Uuid> ids = Serializers.collection(Uuid.SERIALIZER).read(in);
@@ -159,8 +175,9 @@ public final class Server {
       Serializers.collection(User.SERIALIZER).write(out, users);
 
     } else if (type == NetworkCode.GET_ALL_CONVERSATIONS_REQUEST) {
+      Uuid userID = Uuid.SERIALIZER.read(in);
 
-      final Collection<ConversationSummary> conversations = view.getAllConversations();
+      final Collection<ConversationSummary> conversations = view.getAllConversations(userID);
 
       Serializers.INTEGER.write(out, NetworkCode.GET_ALL_CONVERSATIONS_RESPONSE);
       Serializers.collection(ConversationSummary.SERIALIZER).write(out, conversations);
@@ -240,8 +257,9 @@ public final class Server {
     } else if(type == NetworkCode.GENERATE_USER_CLUSTERS_REQUEST) {
 
       final int iterations = Serializers.INTEGER.read(in);
+      final Uuid userID = Uuid.SERIALIZER.read(in);
 
-      boolean success = k_means.runClusterer(iterations);
+      boolean success = k_means.runClusterer(iterations, userID);
 
       Serializers.INTEGER.write(out, NetworkCode.GENERATE_USER_CLUSTERS_RESPONSE);
       Serializers.BOOLEAN.write(out, success);
@@ -255,7 +273,16 @@ public final class Server {
       Serializers.INTEGER.write(out, NetworkCode.GET_RECOMMENDED_USERS_RESPONSE);
       Serializers.collection(User.SERIALIZER).write(out, recommendedUsers);
 
-    } else {
+    } else if(type == NetworkCode.CHECK_EXISTENT_USERNAME_REQUEST) {
+
+      final String name = Serializers.STRING.read(in);
+
+      boolean isExistent = view.isUserTaken(name);
+
+      Serializers.INTEGER.write(out, NetworkCode.CHECK_EXISTENT_USERNAME_RESPONSE);
+      Serializers.BOOLEAN.write(out, isExistent);
+
+    }else {
 
       // In the case that the message was not handled make a dummy message with
       // the type "NO_MESSAGE" so that the client still gets something.

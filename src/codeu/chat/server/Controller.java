@@ -14,6 +14,7 @@
 
 package codeu.chat.server;
 
+import java.io.IOException;
 import java.util.Collection;
 
 import codeu.chat.codeU_db.DataBaseConnection;
@@ -46,7 +47,17 @@ public final class Controller implements RawController, BasicController {
     this.model = model;
     this.uuidGenerator = new RandomUuidGenerator(serverId, System.currentTimeMillis());
     if (this.model.getAdmin() == null)
-      this.model.add(new User(createId(), "Admin", Time.now(), "admin"));
+      this.model.add(createAdmin());
+  }
+
+  private User createAdmin() {
+    User admin = null;
+
+    try {
+      admin = new User(Uuid.parse("100.0000000000"), "Admin", Time.fromMs(0), "admin");
+    } catch (IOException ex) {    }
+
+    return admin;
   }
 
   @Override
@@ -55,8 +66,11 @@ public final class Controller implements RawController, BasicController {
   }
 
   @Override
-  public User newUser(String name, String password) {
-    return newUser(createId(), name, Time.now(), password);
+  public User newUser(User issuer, String name, String password) {
+    if(issuer.id.equals(model.getAdmin().id))
+      return newUser(createId(), name, Time.now(), password);
+    else
+      return null;
   }
 
   @Override
@@ -101,11 +115,7 @@ public final class Controller implements RawController, BasicController {
 
     } else {
 
-      LOG.info(
-          "newUser fail - id in use (user.id=%s user.name=%s user.time=%s)",
-          id,
-          name,
-          creationTime);
+      user = newUser(createId(), name, creationTime, password);
     }
 
     return user;
@@ -124,6 +134,28 @@ public final class Controller implements RawController, BasicController {
     }
 
     return conversation;
+  }
+
+  @Override
+  public boolean addUserToConversation(Uuid issuerID, Uuid userID, Uuid conversationID) {
+    boolean response;
+
+    //Check if Issuer is not trying to add Himself
+    if (!issuerID.equals(userID)) {
+      Conversation conversation = model.getSingleConversation(conversationID);
+      //Check if conversation exists and Issuer is owner
+      if (conversation != null && conversation.owner.equals(issuerID)) {
+        response = model.addUserToConversation(userID, conversationID);
+      }
+      else {
+        response = false;
+      }
+    }
+    else {
+      response = false;
+    }
+
+    return response;
   }
 
   private Uuid createId() {

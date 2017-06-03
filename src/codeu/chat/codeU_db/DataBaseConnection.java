@@ -407,8 +407,8 @@ public final class DataBaseConnection {
     try {
       String sql = "CREATE TABLE USERS " +
           "(ID            VARCHAR(16) PRIMARY KEY NOT NULL," +
-          " UNAME         CHAR(25)    UNIQUE      NOT NULL, " +
-          " TimeCreated   BIGINT               NOT NULL, " +
+          " UNAME         CHAR(25)                NOT NULL, " +
+          " TimeCreated   BIGINT                  NOT NULL, " +
           " PASSWORD      TEXT                    NOT NULL)";
       stmt = c.prepareStatement(sql);
       stmt.executeUpdate();
@@ -424,7 +424,7 @@ public final class DataBaseConnection {
           "(ID            VARCHAR(16) PRIMARY KEY NOT NULL, " +
           " CNAME         CHAR(25)                NOT NULL, " +
           " OWNERID       VARCHAR(16)             NOT NULL, " +
-          " TimeCreated   BIGINT               NOT NULL, " +
+          " TimeCreated   BIGINT                  NOT NULL, " +
           " FOREIGN KEY(OWNERID) REFERENCES USERS(ID))";
       stmt = c.prepareStatement(sql);
       stmt.executeUpdate();

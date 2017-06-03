@@ -24,6 +24,8 @@ import codeu.chat.util.Time;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.store.Store;
 
+import javax.jws.soap.SOAPBinding;
+
 public final class Model {
 
   private static final Comparator<Uuid> UUID_COMPARE = new Comparator<Uuid>() {
@@ -85,7 +87,13 @@ public final class Model {
     String operator = null;
 
     if (ids.isEmpty()) {
-      return found;
+      if(!isBlacklist) {
+        found = "'No ID Specified'";
+        return found;
+      }
+      else {
+        return found;
+      }
     }
 
     found = "";
@@ -111,8 +119,7 @@ public final class Model {
     String query;
     Vector<String> parameters = new Vector<>();
 
-    parameters.add("Admin");
-    query = "UNAME = ?";
+    query = "ID = '100.0'";
 
     Collection<User> returnUser = userById(parameters, query);
     if(!returnUser.isEmpty()){
@@ -146,6 +153,26 @@ public final class Model {
     query = intersect(parameters, ids, isBlackList);
 
     return userById(parameters, query);
+  }
+
+  public Collection<User> userByText(String filter) {
+    String query;
+    Vector<String> parameters = new Vector<>();
+
+    parameters.add(filter);
+    query = "UNAME LIKE '%?%'";
+
+    return userByText(parameters, query);
+  }
+
+  public Collection<User> userByExactText(String filter) {
+    String query;
+    Vector<String> parameters = new Vector<>();
+
+    parameters.add(filter);
+    query = "UNAME = ?";
+
+    return userByText(parameters, query);
   }
 
   public Collection<User> getAllUsers(Uuid conversation) {
@@ -202,7 +229,12 @@ public final class Model {
       parameters.add(SQLFormatter.sqlID(user));
       query = "SELECT * FROM USER_CONVERSATION where USERID = ?;";
 
-      Collection<Uuid> conversationsIDs = dbConnection.getUsersInConversations(parameters, query);
+      Collection<Uuid> conversationsIDs = dbConnection.getConversationsOfUser(parameters, query);
+
+      System.out.println("getConversationsOdUser");
+      for(Uuid conv : conversationsIDs) {
+        System.out.println("ConvID: " + conv);
+      }
 
       parameters.clear();
       query = intersect(parameters, conversationsIDs, false);
@@ -455,11 +487,13 @@ public final class Model {
       System.exit(0);
     }
 
-    add(conversation.owner, conversation.id);
+    addUserToConversation(conversation.owner, conversation.id);
+    if(!conversation.owner.equals(getAdmin().id))
+      addUserToConversation(getAdmin().id, conversation.id);
   }
 
   // Add user to a conversation
-  public void add(Uuid user, Uuid conversation) {
+  public boolean addUserToConversation(Uuid user, Uuid conversation) {
     String query;
     Vector<String> parameters = new Vector<>();
 
@@ -477,6 +511,7 @@ public final class Model {
       System.err.println(e.getClass().getName() + ": " + e.getMessage());
       System.exit(0);
     }
+    return true;
   }
 
   public void update(Conversation conversation) {

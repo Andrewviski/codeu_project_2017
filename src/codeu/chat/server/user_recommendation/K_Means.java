@@ -15,11 +15,11 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.*;
 
+import codeu.chat.util.connections.Connection;
 import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSSample;
 import opennlp.tools.postag.POSTaggerME;
 import opennlp.tools.tokenize.WhitespaceTokenizer;
-import sun.reflect.generics.reflectiveObjects.LazyReflectiveObjectGenerator;
 
 /**
  * Created by strobe on 23/05/17.
@@ -61,13 +61,25 @@ public class K_Means {
     return taggedSentence;
   }
 
+  private Set<Integer> randomIndexes(int requiredIDX, int possibleUsers) {
+    Random rng = new Random();
+    Set<Integer> generated = new HashSet<>();
+    while (generated.size() < requiredIDX)
+    {
+      Integer next = rng.nextInt(possibleUsers);
+      generated.add(next);
+    }
+
+    return generated;
+  }
+
   private void initializeClusters() {
     clusterVector = new Vector<>();
     allKeyWords = new HashSet<>();
     Cluster cluster;
     int numUsers = userVector.size();
+    int counter = 0;
     int numClusters = (int) (Math.sqrt(numUsers));
-    int clustersIdx[] = new int[numUsers];
 
     //Change for a more efficient way to get all the key words found in messages
     Iterator<UserFeatures> iterator = userVector.iterator();
@@ -75,25 +87,21 @@ public class K_Means {
       allKeyWords.addAll(iterator.next().getInterestsList());
     }
 
-    //Change for a more efficient way to get non repeating random numbers
-    for (int i = 0; i < numUsers; i++) {
-      clustersIdx[i] = i;
-    }
-    Collections.shuffle(Arrays.asList(clustersIdx));
-
     //Initialize the clusters with random userVectors
-    for (int i = 0; i < numClusters; i++) {
-      int idx = clustersIdx[i];
-      cluster = new Cluster(i);
+    for (int idx : randomIndexes(numClusters, numUsers)) {
+      cluster = new Cluster(counter);
       cluster.initialize(userVector.get(idx));
       clusterVector.add(cluster);
+      counter++;
     }
   }
 
   private void initializeUserVector() {
+    Collection<Uuid> adminID = new ArrayList<>();
+    adminID.add(model.getAdmin().id);
 
     userVector = new Vector<>();
-    Collection<User> users = model.getAllUsers(Uuid.NULL);
+    Collection<User> users = model.userById(adminID, true);
 
     for (User user : users) {
       UserFeatures features = new UserFeatures(user.id);
@@ -116,11 +124,14 @@ public class K_Means {
         String taggedMessage = tagger(message.content);
         for (String word : taggedMessage.split("\\s+")) {
           validWord = false;
-          if (word.contains("_NN")) {
-            word.replace("_NN", "");
+          if (word.contains("_NNS")) {
+            word = word.replace("_NNS", "");
             validWord = true;
           } else if (word.contains("_NNP")) {
-            word.replace("_NNP", "");
+            word = word.replace("_NNP", "");
+            validWord = true;
+          } else if (word.contains("_NN")) {
+            word = word.replace("_NN", "");
             validWord = true;
           }
 
@@ -130,7 +141,7 @@ public class K_Means {
             } else {
               Mood temp = interests.get(word);
               temp.add(mood);
-              interests.put(word, mood);
+              interests.put(word, temp);
             }
           }
         }
@@ -180,17 +191,21 @@ public class K_Means {
 
       for (UserFeatures user : userVector) {
         sums[user.getCluster()].add(user.getMood(keyWord));
-        counter[user.getCluster()]++;
+        counter[user.getCluster()] = counter[user.getCluster()] + 1;
       }
 
       for (int i = 0; i < numClusters; i++) {
         Mood avg = Mood.average(sums[i], counter[i]);
-        clusterVector.get(i).updateEntry(keyWord, avg);
+        clusterVector.get(i).setEntry(keyWord, avg);
       }
     }
   }
 
-  public boolean runClusterer(int iterations) {
+  public boolean runClusterer(int iterations, Uuid userID) {
+    if (!model.getAdmin().id.equals(userID)) {
+      return false;
+    }
+
     System.out.println("Running Clusterer");
     if(!isModelTrained) {
       System.out.println("Training Model");
@@ -206,7 +221,7 @@ public class K_Means {
     }
 
     for(UserFeatures userFeatures : userVector) {
-      model.assignUserToCluster(userFeatures.userID, userFeatures.cluster);
+      model.assignUserToCluster(userFeatures.userID, userFeatures.getCluster());
     }
 
     return true;

@@ -52,7 +52,7 @@ public final class Chat {
     System.out.println("   sign-out  - sign out current user.");
     System.out.println("   current   - show current user, conversation, message.");
     System.out.println("User commands: [Require admin privileges]");
-    System.out.println("   u-add <name>  - add a new user.");
+    System.out.println("   u-add <name>  - add a new user. [ADMIN ONLY]");
     System.out.println("   u-list-all    - list all users known to system.");
     System.out.println("Conversation commands:");
     System.out.println("   c-add <title>    - add a new conversation.");
@@ -159,7 +159,7 @@ public final class Chat {
         if (!clientContext.conversation.hasCurrent()) {
           System.out.println("ERROR: no conversation selected.");
         } else {
-          addUserToCoversation(clientContext.user.getCurrent().id, clientContext.conversation.getCurrent());
+          addUserToCoversation(user);
         }
       }
 
@@ -216,7 +216,7 @@ public final class Chat {
       } else {
         int iterations = Integer.parseInt(tokenScanner.next().trim());
         if(!clientContext.user.generateClusters(iterations)) {
-          System.out.println("ERROR: Clusters not generated.");
+          System.out.println("ERROR: Clusters not generated. Only Admin can perform this action");
         }
       }
 
@@ -238,8 +238,8 @@ public final class Chat {
     tokenScanner.close();
   }
 
-  private void addUserToCoversation(Uuid id, ConversationSummary current) {
-
+  private void addUserToCoversation(String name) {
+    clientContext.conversation.addUser(clientContext.user.getByName(name).id, clientContext.user.getCurrent().id);
   }
 
   // Sign in a user.
@@ -317,7 +317,7 @@ public final class Chat {
 
   // Add a new user.
   private void addUser(String name, String password) {
-    String ret = clientContext.user.addUser(name, password);
+    String ret = clientContext.user.addUser(clientContext.user.getCurrent(), name, password);
     if (ret != null)
       System.out.println(ret);
   }

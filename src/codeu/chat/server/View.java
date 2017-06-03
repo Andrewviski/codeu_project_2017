@@ -50,11 +50,11 @@ public final class View implements BasicView, LogicalView, SinglesView {
   }
 
   @Override
-  public Collection<ConversationSummary> getAllConversations() {
+  public Collection<ConversationSummary> getAllConversations(Uuid userID) {
 
     final Collection<ConversationSummary> summaries = new ArrayList<>();
 
-    for (final Conversation conversation : model.getAllConversations(Uuid.NULL)) {
+    for (final Conversation conversation : model.getAllConversations(userID)) {
       summaries.add(conversation.summary);
     }
 
@@ -161,6 +161,15 @@ public final class View implements BasicView, LogicalView, SinglesView {
     Collection<Uuid> userIDs = model.getUsersIDInCluster(cluster);
 
     return getUsers(userIDs);
+  }
+
+  public boolean isUserTaken(String name) {
+    if (model.userByExactText(name).isEmpty()) {
+      return false;
+    }
+    else {
+      return true;
+    }
   }
 
   @Override

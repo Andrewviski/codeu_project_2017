@@ -38,15 +38,12 @@ public final class RawControllerTest {
   public void doBefore() {
     model = new Model();
     controller = new Controller(Uuid.NULL, model);
-
-    userId = new Uuid(1);
-    conversationId = new Uuid(2);
-    messageId = new Uuid(3);
   }
 
   @Test
   public void testAddUser() {
 
+    userId = new Uuid(10);
     final User user = controller.newUser(userId, "user", Time.now(), "password");
 
     assertFalse(
@@ -60,6 +57,8 @@ public final class RawControllerTest {
   @Test
   public void testAddConversation() {
 
+    userId = new Uuid(20);
+    conversationId = new Uuid(21);
     final User user = controller.newUser(userId, "user", Time.now(), "password");
 
     assertFalse(
@@ -86,6 +85,9 @@ public final class RawControllerTest {
   @Test
   public void testAddMessage() {
 
+    userId = new Uuid(30);
+    conversationId = new Uuid(31);
+    messageId = new Uuid(32);
     final User user = controller.newUser(userId, "user", Time.now(), "password");
 
     assertFalse(

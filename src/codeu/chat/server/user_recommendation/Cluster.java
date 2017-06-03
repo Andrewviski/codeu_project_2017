@@ -34,7 +34,7 @@ public class Cluster {
     return interests.get(keyWord);
   }
 
-  public void updateEntry(String keyWord, Mood value) {
+  public void setEntry(String keyWord, Mood value) {
     interests.put(keyWord, value);
   }
 
