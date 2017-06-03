@@ -128,7 +128,19 @@ Classes that are shared by the clients and servers.
 Some basic infrastructure classes used throughout the project.
 
 
-## Disclaimer
+## Resources
 
-"Training data for our machine learning model was gathered from the "Data For Everyone" 
-dataset library at © Crowdflower Inc. (https://www.crowdflower.com/data-for-everyone)"
+### Crowdflower
+
+Training data for our machine learning model was gathered from the "Data For Everyone" 
+dataset library at © Crowdflower Inc. (https://www.crowdflower.com/data-for-everyone)
+
+### OpenNLP
+
+https://opennlp.apache.org/
+Used to tag the messages and sentiment analysis.
+
+### SQLite
+
+https://www.sqlite.org/ 
+Used to create the database.
