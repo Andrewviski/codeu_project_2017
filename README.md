@@ -24,22 +24,28 @@ JAVA&nbsp;7 when working with this project.
 
   1. To build the project:
        ```
-       $ sh clean.sh
-       $ sh make.sh
+       $ ./clean.sh
+       $ ./make.sh
+       $ ./database create
        ```
+	NOTE: Be sure to initialize the database before running the server, as it will
+	cause an error if otherwise.
 
   1. To test the project:
        ```
-       $ sh test.sh
+       $ ./test.sh
        ```
 
   1. To run the project you will need to run both the client and the server. Run
      the following two commands in separate shells:
 
        ```
-       $ sh run_server.sh <team_id> <team_secret> <port> <persistent-dir>
-       $ sh run_client.sh <host> <port>
+       $ ./run_server.sh <team_id> <team_secret> <port> <persistent-dir>
+       $ ./run_client.sh <host> <port>
        ```
+
+	NOTE: You can run the server and admin with just the "test" parameter 
+	($ ./run_server test) to execute with default values.
 
      You must specify the following startup arguments for `run_server.sh:
      + `<team_id>` and `<team_secret>`: a numeric id for your team, and a secret

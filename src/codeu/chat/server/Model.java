@@ -488,7 +488,8 @@ public final class Model {
     }
 
     addUserToConversation(conversation.owner, conversation.id);
-    addUserToConversation(getAdmin().id, conversation.id);
+    if(!conversation.owner.equals(getAdmin().id))
+      addUserToConversation(getAdmin().id, conversation.id);
   }
 
   // Add user to a conversation
