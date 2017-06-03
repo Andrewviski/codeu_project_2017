@@ -22,14 +22,13 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import codeu.chat.common.*;
-import codeu.chat.util.Logger;
-import codeu.chat.util.Serializers;
-import codeu.chat.util.Time;
-import codeu.chat.util.Timeline;
-import codeu.chat.util.Uuid;
+import codeu.chat.util.*;
 import codeu.chat.util.connections.Connection;
+import codeu.chat.server.user_recommendation.K_Means;
 
 public final class Server {
 
@@ -46,6 +45,8 @@ public final class Server {
   private final View view = new View(model);
   private final Controller controller;
 
+  private final K_Means k_means;
+
   private final Relay relay;
   private Uuid lastSeen = Uuid.NULL;
 
@@ -56,6 +57,8 @@ public final class Server {
 
     this.controller = new Controller(id, model);
     this.relay = relay;
+
+    this.k_means = new K_Means(model);
 
     timeline.scheduleNow(new Runnable() {
       @Override
@@ -130,10 +133,11 @@ public final class Server {
 
     } else if (type == NetworkCode.NEW_USER_REQUEST) {
 
+      final User issuer = User.SERIALIZER.read(in);
       final String name = Serializers.STRING.read(in);
       final String password = Serializers.STRING.read(in);
 
-      final User user = controller.newUser(name, password);
+      final User user = controller.newUser(issuer, name, password);
 
       Serializers.INTEGER.write(out, NetworkCode.NEW_USER_RESPONSE);
       Serializers.nullable(User.SERIALIZER).write(out, user);
@@ -148,6 +152,19 @@ public final class Server {
       Serializers.INTEGER.write(out, NetworkCode.NEW_CONVERSATION_RESPONSE);
       Serializers.nullable(Conversation.SERIALIZER).write(out, conversation);
 
+    } else if (type == NetworkCode.ADD_USER_TO_CONVERSATION_REQUEST) {
+
+      final Uuid issuerID = Uuid.SERIALIZER.read(in);
+      final Uuid userID = Uuid.SERIALIZER.read(in);
+      final Uuid conversationID = Uuid.SERIALIZER.read(in);
+
+      boolean response = false;
+
+      response = controller.addUserToConversation(issuerID, userID, conversationID);
+
+      Serializers.INTEGER.write(out, NetworkCode.ADD_USER_TO_CONVERSATION_RESPONSE);
+      Serializers.BOOLEAN.write(out, response);
+
     } else if (type == NetworkCode.GET_USERS_BY_ID_REQUEST) {
 
       final Collection<Uuid> ids = Serializers.collection(Uuid.SERIALIZER).read(in);
@@ -158,8 +175,9 @@ public final class Server {
       Serializers.collection(User.SERIALIZER).write(out, users);
 
     } else if (type == NetworkCode.GET_ALL_CONVERSATIONS_REQUEST) {
+      Uuid userID = Uuid.SERIALIZER.read(in);
 
-      final Collection<ConversationSummary> conversations = view.getAllConversations();
+      final Collection<ConversationSummary> conversations = view.getAllConversations(userID);
 
       Serializers.INTEGER.write(out, NetworkCode.GET_ALL_CONVERSATIONS_RESPONSE);
       Serializers.collection(ConversationSummary.SERIALIZER).write(out, conversations);
@@ -236,7 +254,35 @@ public final class Server {
       Serializers.INTEGER.write(out, NetworkCode.GET_MESSAGES_BY_RANGE_RESPONSE);
       Serializers.collection(Message.SERIALIZER).write(out, messages);
 
-    } else {
+    } else if(type == NetworkCode.GENERATE_USER_CLUSTERS_REQUEST) {
+
+      final int iterations = Serializers.INTEGER.read(in);
+      final Uuid userID = Uuid.SERIALIZER.read(in);
+
+      boolean success = k_means.runClusterer(iterations, userID);
+
+      Serializers.INTEGER.write(out, NetworkCode.GENERATE_USER_CLUSTERS_RESPONSE);
+      Serializers.BOOLEAN.write(out, success);
+
+    } else if(type == NetworkCode.GET_RECOMMENDED_USERS_REQUEST) {
+
+      final Uuid user = Uuid.SERIALIZER.read(in);
+
+      Collection<User> recommendedUsers = view.getRecommendedUsers(user);
+
+      Serializers.INTEGER.write(out, NetworkCode.GET_RECOMMENDED_USERS_RESPONSE);
+      Serializers.collection(User.SERIALIZER).write(out, recommendedUsers);
+
+    } else if(type == NetworkCode.CHECK_EXISTENT_USERNAME_REQUEST) {
+
+      final String name = Serializers.STRING.read(in);
+
+      boolean isExistent = view.isUserTaken(name);
+
+      Serializers.INTEGER.write(out, NetworkCode.CHECK_EXISTENT_USERNAME_RESPONSE);
+      Serializers.BOOLEAN.write(out, isExistent);
+
+    }else {
 
       // In the case that the message was not handled make a dummy message with
       // the type "NO_MESSAGE" so that the client still gets something.
@@ -256,13 +302,13 @@ public final class Server {
 
     String password = "Temporal Password for Relay";
 
-    User user = model.userById("ID = " + SQLFormatter.sqlID(relayUser.id()), null).iterator().next();
+    User user = model.getSingleUser(relayUser.id());
 
     if (user == null) {
       user = controller.newUser(relayUser.id(), relayUser.text(), relayUser.time(), password);
     }
 
-    Conversation conversation = model.conversationById("ID = " + SQLFormatter.sqlID(relayConversation.id()), null).iterator().next();
+    Conversation conversation = model.getSingleConversation(relayConversation.id());
 
     if (conversation == null) {
 
@@ -270,19 +316,19 @@ public final class Server {
       // has a message in the conversation will get ownership over this server's copy
       // of the conversation.
       conversation = controller.newConversation(relayConversation.id(),
-                                                relayConversation.text(),
-                                                user.id,
-                                                relayConversation.time());
+          relayConversation.text(),
+          user.id,
+          relayConversation.time());
     }
 
-    Message message = model.messageById("ID = " + relayMessage.id().toString(), null).iterator().next();
+    Message message = model.getSingleMessage(relayMessage.id());
 
     if (message == null) {
       message = controller.newMessage(relayMessage.id(),
-                                      user.id,
-                                      conversation.id,
-                                      relayMessage.text(),
-                                      relayMessage.time());
+          user.id,
+          conversation.id,
+          relayMessage.text(),
+          relayMessage.time());
     }
   }
 
@@ -296,10 +342,10 @@ public final class Server {
         final Conversation conversation = view.findConversation(conversationId);
         final Message message = view.findMessage(messageId);
         relay.write(id,
-                    secret,
-                    relay.pack(user.id, user.name, user.creation),
-                    relay.pack(conversation.id, conversation.title, conversation.creation),
-                    relay.pack(message.id, message.content, message.creation));
+            secret,
+            relay.pack(user.id, user.name, user.creation),
+            relay.pack(conversation.id, conversation.title, conversation.creation),
+            relay.pack(message.id, message.content, message.creation));
       }
     };
   }

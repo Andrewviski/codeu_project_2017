@@ -26,140 +26,154 @@ import codeu.chat.util.store.Store;
 
 public final class ClientUser {
 
-    private final static Logger.Log LOG = Logger.newLog(ClientUser.class);
+  private final static Logger.Log LOG = Logger.newLog(ClientUser.class);
 
-    private static final Collection<Uuid> EMPTY = Arrays.asList(new Uuid[0]);
-    private final Controller controller;
-    private final View view;
+  private static final Collection<Uuid> EMPTY = Arrays.asList(new Uuid[0]);
+  private final Controller controller;
+  private final View view;
 
-    private User current = null;
+  private User current = null;
 
-    private final Map<Uuid, User> usersById = new HashMap<>();
+  private final Map<Uuid, User> usersById = new HashMap<>();
 
-    // This is the set of users known to the server, sorted by name.
-    private Store<String, User> usersByName = new Store<>(String.CASE_INSENSITIVE_ORDER);
+  // This is the set of users known to the server, sorted by name.
+  private Store<String, User> usersByName = new Store<>(String.CASE_INSENSITIVE_ORDER);
 
-    public ClientUser(Controller controller, View view) {
-        this.controller = controller;
-        this.view = view;
+  public ClientUser(Controller controller, View view) {
+    this.controller = controller;
+    this.view = view;
+  }
+
+  // Validate the username string
+  public boolean isValidName(String userName) {
+    boolean clean = true;
+    if (userName.length() == 0) {
+      clean = false;
+    } else {
+      boolean isExistent = view.checkValidUserName(userName);
+      if (isExistent) {
+        clean = false;
+        System.out.println("Username already taken.");
+      }
     }
+    return clean;
+  }
 
-    // Validate the username string
-    static public boolean isValidName(String userName) {
-        boolean clean = true;
-        if (userName.length() == 0) {
-            clean = false;
+  static public boolean isValidPassword(String passWord) {
+    return passWord != "";
+  }
+
+  public boolean hasCurrent() {
+    return (current != null);
+  }
+
+  public User getCurrent() {
+    return current;
+  }
+
+  public boolean signInUser(String name, String password) {
+    updateUsers();
+    final User prev = current;
+    if (name != null) {
+      final User newCurrent = usersByName.first(name);
+      if (newCurrent != null) {
+        if (newCurrent.password.equals(password)) {
+          current = newCurrent;
         } else {
-
-            // TODO: check for invalid characters
-
+          System.out.println("Wrong Password");
         }
-        return clean;
+      }
     }
+    return (prev != current);
+  }
 
-    static public boolean isValidPassword(String passWord) {
-        return passWord != "";
+  public boolean signOutUser() {
+    boolean hadCurrent = hasCurrent();
+    current = null;
+    return hadCurrent;
+  }
+
+  public void showCurrent() {
+    printUser(current);
+  }
+
+  public String addUser(User issuer, String name, String password) {
+    final boolean validInputs = isValidName(name) && isValidPassword(password);
+
+    final User user = (validInputs) ? controller.newUser(issuer, name, password) : null;
+
+    if (user == null) {
+      return String.format("Error: user not created - [0].\n",
+          (validInputs) ? "server failure" : "bad input value");
+    } else {
+      LOG.info("New user complete, Name= \"%s\" UUID=%s", user.name, user.id);
+      updateUsers();
     }
+    return "User Added successfully!";
+  }
 
-    public boolean hasCurrent() {
-        return (current != null);
+  public void showAllUsers() {
+    updateUsers();
+    for (final User u : usersByName.all()) {
+      printUser(u);
     }
+  }
 
-    public User getCurrent() {
-        return current;
+  public User lookup(Uuid id) {
+    return (usersById.containsKey(id)) ? usersById.get(id) : null;
+  }
+
+  public String getName(Uuid id) {
+    final User user = lookup(id);
+    if (user == null) {
+      LOG.warning("userContext.lookup() failed on ID: %s", id);
+      return null;
+    } else {
+      return user.name;
     }
+  }
 
-    public boolean signInUser(String name, String password) {
-        updateUsers();
-        final User prev = current;
-        if (name != null) {
-            final User newCurrent = usersByName.first(name);
-            if (newCurrent != null) {
-                if (newCurrent.password.equals(password)) {
-                    current = newCurrent;
-                } else {
-                    System.out.println("Wrong Password");
-                }
-            }
-        }
-        return (prev != current);
+  public Iterable<User> getUsers() {
+    return usersByName.all();
+  }
+
+  public void updateUsers() {
+    usersById.clear();
+    usersByName = new Store<>(String.CASE_INSENSITIVE_ORDER);
+
+    for (final User user : view.getUsersExcluding(EMPTY)) {
+      usersById.put(user.id, user);
+      usersByName.insert(user.name, user);
     }
+  }
 
-    public boolean signOutUser() {
-        boolean hadCurrent = hasCurrent();
-        current = null;
-        return hadCurrent;
+  public static String getUserInfoString(User user) {
+    return (user == null) ? "Null user" :
+        String.format(" User: %s\n   Id: %s\n   created: %s\n", user.name, user.id, user.creation);
+  }
+
+  public String showUserInfo(String uname) {
+    return getUserInfoString(usersByName.first(uname));
+  }
+
+  // Move to User's toString()
+  public static void printUser(User user) {
+    System.out.println(getUserInfoString(user));
+  }
+
+  //Only the ADMIN should be able to run this function
+  public boolean generateClusters(int iterations) {
+    return controller.generateUserClusters(iterations, current.id);
+  }
+
+  public void getRecommendedUsers() {
+    for (User user : view.getRecommendedUsers(current.id)) {
+      if (!user.id.equals(current.id))
+        printUser(user);
     }
+  }
 
-    public void showCurrent() {
-        printUser(current);
-    }
-
-    public String addUser(String name, String password) {
-        if (/*current == null ||  !current.name.equals("Admin")*/ false) {
-            return "Must be Admin!";
-        } else {
-            final boolean validInputs = isValidName(name) && isValidPassword(password);
-
-            final User user = (validInputs) ? controller.newUser(name, password) : null;
-
-            if (user == null) {
-                return String.format("Error: user not created - [0].\n",
-                        (validInputs) ? "server failure" : "bad input value");
-            } else {
-                LOG.info("New user complete, Name= \"%s\" UUID=%s", user.name, user.id);
-                updateUsers();
-            }
-            return "User Added successfully!";
-        }
-    }
-
-    public void showAllUsers() {
-        updateUsers();
-        for (final User u : usersByName.all()) {
-            printUser(u);
-        }
-    }
-
-    public User lookup(Uuid id) {
-        return (usersById.containsKey(id)) ? usersById.get(id) : null;
-    }
-
-    public String getName(Uuid id) {
-        final User user = lookup(id);
-        if (user == null) {
-            LOG.warning("userContext.lookup() failed on ID: %s", id);
-            return null;
-        } else {
-            return user.name;
-        }
-    }
-
-    public Iterable<User> getUsers() {
-        return usersByName.all();
-    }
-
-    public void updateUsers() {
-        usersById.clear();
-        usersByName = new Store<>(String.CASE_INSENSITIVE_ORDER);
-
-        for (final User user : view.getUsersExcluding(EMPTY)) {
-            usersById.put(user.id, user);
-            usersByName.insert(user.name, user);
-        }
-    }
-
-    public static String getUserInfoString(User user) {
-        return (user == null) ? "Null user" :
-                String.format(" User: %s\n   Id: %s\n   created: %s\n", user.name, user.id, user.creation);
-    }
-
-    public String showUserInfo(String uname) {
-        return getUserInfoString(usersByName.first(uname));
-    }
-
-    // Move to User's toString()
-    public static void printUser(User user) {
-        System.out.println(getUserInfoString(user));
-    }
+  public User getByName(String name){
+    return usersByName.first(name);
+  }
 }

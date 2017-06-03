@@ -40,7 +40,7 @@ public interface BasicView {
   // GET ALL CONVERSATIONS
   //
   //   Return a summary of each converation.
-  Collection<ConversationSummary> getAllConversations();
+  Collection<ConversationSummary> getAllConversations(Uuid user);
 
   // GET CONVERSATIONS
   //
